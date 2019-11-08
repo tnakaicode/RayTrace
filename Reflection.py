@@ -41,9 +41,9 @@ def get_surface_sfc(filename):
     surf = np.loadtxt(filename, skiprows=3).T
     nx, ny = surf.shape
     pnt_2d = TColgp_Array2OfPnt(1, nx, 1, ny)
-    for row in range(pnt_2d.LowerRow(), pnt_2d.UpperRow()+1):
-        for col in range(pnt_2d.LowerCol(), pnt_2d.UpperCol()+1):
-            i, j = row-1, col-1
+    for row in range(pnt_2d.LowerRow(), pnt_2d.UpperRow() + 1):
+        for col in range(pnt_2d.LowerCol(), pnt_2d.UpperCol() + 1):
+            i, j = row - 1, col - 1
             pnt = gp_Pnt(mesh[0][i, j], mesh[1][i, j], surf[i, j])
             pnt_2d.SetValue(row, col, pnt)
     surface = GeomAPI_PointsToBSplineSurface(
