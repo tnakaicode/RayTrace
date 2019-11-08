@@ -26,6 +26,8 @@ from OCCUtils.Construct import dir_to_vec, vec_to_dir
 import logging
 logging.getLogger('matplotlib').setLevel(logging.ERROR)
 
+from Surface import surf_curv
+
 
 def pnt_trf_vec(pnt=gp_Pnt(), vec=gp_Vec()):
     v = point_to_vector(pnt)
@@ -112,3 +114,16 @@ class plotocc (object):
     def show(self):
         self.display.FitAll()
         self.start_display()
+
+
+class Face (object):
+
+    def __init__(self, axs=gp_Ax3(), *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.axis = axs
+        self.face = surf_curv(rxy=[0, 0])
+        self.MoveSurface(self.axis)
+
+    def MoveSurface(self, axs=gp_Ax3()):
+        self.trsf = set_trf(gp_Ax3(), self.axis)
+        self.face.Move(TopLoc_Location(self.trsf))
