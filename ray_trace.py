@@ -16,22 +16,23 @@ class TraceSystem (plotocc):
 
     def __init__(self):
         plotocc.__init__(self)
-        self.axis = gp_Ax3(gp_Pnt(0, 0, -100), gp_Dir(0, 0, 1))
+        self.axis = gp_Ax3(gp_Pnt(1000, 1000, 100), gp_Dir(0, 0, 1))
         self.trsf = set_trf(ax2=self.axis)
 
-        ax1 = gp_Ax3(gp_Pnt(0, 0, 100), gp_Dir(0, 1, 0))
+        ax1 = gp_Ax3(gp_Pnt(0, 0, 100), gp_Dir(0, 0, -1))
         ax1.Transform(self.trsf)
         self.surf1 = Face(ax1)
 
-        ax2 = gp_Ax3(gp_Pnt(0, 0, 200), gp_Dir(0, -1, 0))
+        ax2 = gp_Ax3(gp_Pnt(100, 0, 200), gp_Dir(0, 0, 1))
         ax2.Transform(self.trsf)
         self.surf2 = Face(ax2)
         self.surf2.face = surf_curv(lxy=[200, 150], rxy=[0, 0])
-        self.surf2.MoveSurface(self.surf2.axis)
+        self.surf2.MoveSurface(ax2=self.surf2.axis)
 
-        ax3 = gp_Ax3(gp_Pnt(0, 0, 0), gp_Dir(0, 0, 1))
-        ax3.Transform(self.trsf)
-        self.surf2.MoveSurface(ax3)
+        ax3 = gp_Ax3(gp_Pnt(0, 0, 10), gp_Dir(0, 0, 1))
+        # ax3.Transform(self.trsf)
+        # self.surf2.MoveSurface(ax1=ax3)
+        self.surf2.rot_axs(self.axis, [0, 0, 10])
 
     def Display(self):
         self.display.DisplayShape(self.surf1.face)

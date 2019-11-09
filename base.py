@@ -122,8 +122,18 @@ class Face (object):
         super().__init__(*args, **kwargs)
         self.axis = axs
         self.face = surf_curv(rxy=[0, 0])
-        self.MoveSurface(self.axis)
+        self.MoveSurface(ax2=self.axis)
 
-    def MoveSurface(self, axs=gp_Ax3()):
-        self.trsf = set_trf(gp_Ax3(), self.axis)
+    def MoveSurface(self, ax1=gp_Ax3(), ax2=gp_Ax3()):
+        self.trsf = set_trf(ax1, ax2)
         self.face.Move(TopLoc_Location(self.trsf))
+
+    def rot_axs(self, axs=gp_Ax3(), rxyz=[0, 0, 0]):
+        ax1 = gp_Ax1(self.axis.Location(), self.axis.XDirection())
+        ax2 = gp_Ax1(self.axis.Location(), self.axis.YDirection())
+        ax3 = gp_Ax1(self.axis.Location(), self.axis.Direction())
+        self.axis.Rotate(ax1, np.deg2rad(rxyz[0]))
+        self.axis.Rotate(ax2, np.deg2rad(rxyz[1]))
+        self.axis.Rotate(ax3, np.deg2rad(rxyz[2]))
+        self.MoveSurface(ax1=axs, ax2=self.axis)
+        #self.axis = axs
