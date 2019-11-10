@@ -66,6 +66,16 @@ def gen_ellipsoid(axs=gp_Ax3(), rxyz=[10, 20, 30]):
     ellips.Location(loc)
     return ellips
 
+def rot_axs(axis=gp_Ax3(), pxyz=[0, 0, 0], rxyz=[0, 0, 0]):
+    axs = gp_Ax3(gp_Pnt(*pxyz), gp_Dir(0,0,1))
+    ax1 = gp_Ax1(axis.Location(), axis.XDirection())
+    ax2 = gp_Ax1(axis.Location(), axis.YDirection())
+    ax3 = gp_Ax1(axis.Location(), axis.Direction())
+    axs.Rotate(ax1, np.deg2rad(rxyz[0]))
+    axs.Rotate(ax2, np.deg2rad(rxyz[1]))
+    axs.Rotate(ax3, np.deg2rad(rxyz[2]))
+    trsf = set_trf(gp_Ax3(), axs)
+    axis.Transform(trsf)
 
 class plotocc (object):
 

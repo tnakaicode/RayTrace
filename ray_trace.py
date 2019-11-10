@@ -15,7 +15,7 @@ from OCCUtils.Construct import vec_to_dir, dir_to_vec
 from OCCUtils.Construct import point_to_vector, vector_to_point
 from OCCUtils.Construct import make_plane, make_polygon
 
-from base import plotocc, Face, set_trf
+from base import plotocc, Face, set_trf, rot_axs
 from Surface import surf_curv
 
 def move_pnt_to_dir(axs=gp_Ax3(), scale=100):
@@ -29,20 +29,17 @@ class TraceSystem (plotocc):
         self.axis = gp_Ax3(gp_Pnt(1000, 1000, 1000), gp_Dir(0, 0, 1))
         self.trsf = set_trf(ax2=self.axis)
         
-        self.beam = gp_Ax3()
-        self.beam.Transform(self.trsf)
-
         ax1 = gp_Ax3(gp_Pnt(0, 0, 500), gp_Dir(0, 0, -1))
         ax1.Transform(self.trsf)
         self.surf1 = Face(ax1)
-        self.surf1.face = surf_curv(lxy=[250, 250], rxy=[0, 0])
+        self.surf1.face = surf_curv(lxy=[250, 250], rxy=[500, 500])
         self.surf1.MoveSurface(ax2=self.surf1.axis)
         self.surf1.rot_axs(rxyz=[0, 45, 10])
 
         ax2 = gp_Ax3(gp_Pnt(-500, 0, 500), gp_Dir(0, 0, 1))
         ax2.Transform(self.trsf)
         self.surf2 = Face(ax2)
-        self.surf2.face = surf_curv(lxy=[350, 250], rxy=[0, 0])
+        self.surf2.face = surf_curv(lxy=[350, 250], rxy=[0, 1000])
         self.surf2.MoveSurface(ax2=self.surf2.axis)
         self.surf2.rot_axs(pxyz=[0,0,10], rxyz=[0, 45, -10])
         
@@ -52,24 +49,33 @@ class TraceSystem (plotocc):
         self.surf3.face = surf_curv(lxy=[1000, 1000], rxy=[0, 0])
         self.surf3.MoveSurface(ax2=self.surf3.axis)
         
-        self.run_beam()
+        self.beam1 = gp_Ax3()
+        rot_axs(self.beam1, [10,0,0], [0,0,0])
+        self.beam1.Transform(self.trsf)
+        self.beam1, self.ray1 = self.run_beam(self.beam1)
+        
+        self.beam2 = gp_Ax3()
+        rot_axs(self.beam2, [0,0,0], [0,5,0])
+        self.beam2.Transform(self.trsf)
+        self.beam2, self.ray2 = self.run_beam(self.beam2)
+        
     
-    def run_beam(self):
-        pts = [self.beam.Location()]
+    def run_beam(self, beam=gp_Ax3()):
+        pts = [beam.Location()]
         
-        print(self.beam.Location(), dir_to_vec(self.beam.Direction()))
-        self.beam = self.Reflect(self.beam, self.surf1.face)
-        pts.append(self.beam.Location())
+        print(beam.Location(), dir_to_vec(beam.Direction()))
+        beam = self.Reflect(beam, self.surf1.face)
+        pts.append(beam.Location())
         
-        print(self.beam.Location(), dir_to_vec(self.beam.Direction()))
+        print(beam.Location(), dir_to_vec(beam.Direction()))
+        beam = self.Reflect(beam, self.surf2.face)
+        pts.append(beam.Location())
         
-        self.beam = self.Reflect(self.beam, self.surf2.face)
-        pts.append(self.beam.Location())
-        
-        pnt = move_pnt_to_dir(self.beam, 1000)
+        pnt = move_pnt_to_dir(beam, 1000)
         pts.append(pnt)
         
-        self.beam_ray = make_polygon(pts)
+        beam_ray = make_polygon(pts)
+        return beam, beam_ray
         
     
     def Reflect(self, beam=gp_Ax3(), surf=make_plane()):
@@ -114,7 +120,8 @@ class TraceSystem (plotocc):
         self.display.DisplayShape(self.surf1.face)
         self.display.DisplayShape(self.surf2.face)
         self.display.DisplayShape(self.surf3.face, transparency=0.7, color="BLUE")
-        self.display.DisplayShape(self.beam_ray)
+        self.display.DisplayShape(self.ray1)
+        self.display.DisplayShape(self.ray2)
 
         self.show_axs_pln(self.axis, scale=10)
         self.show_axs_pln(self.surf1.axis, scale=20)
