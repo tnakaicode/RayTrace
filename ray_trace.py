@@ -7,10 +7,15 @@ from optparse import OptionParser
 
 from OCC.gp import gp_Pnt, gp_Vec, gp_Dir
 from OCC.gp import gp_Ax1, gp_Ax2, gp_Ax3
+from OCC.BRep import BRep_Tool
+from OCC.Geom import Geom_Line
+from OCC.GeomAPI import GeomAPI_IntCS
+from OCC.GeomLProp import GeomLProp_SurfaceTool
+from OCCUtils.Construct import vec_to_dir, dir_to_vec
+from OCCUtils.Construct import make_plane, make_polygon
 
 from base import plotocc, Face, set_trf
 from Surface import surf_curv
-
 
 class TraceSystem (plotocc):
 
@@ -18,6 +23,9 @@ class TraceSystem (plotocc):
         plotocc.__init__(self)
         self.axis = gp_Ax3(gp_Pnt(1000, 1000, 100), gp_Dir(0, 0, 1))
         self.trsf = set_trf(ax2=self.axis)
+        
+        self.beam = gp_Ax3()
+        self.beam.Transform(self.trsf)
 
         ax1 = gp_Ax3(gp_Pnt(0, 0, 100), gp_Dir(0, 0, -1))
         ax1.Transform(self.trsf)
@@ -37,11 +45,59 @@ class TraceSystem (plotocc):
         self.surf3.face = surf_curv(lxy=[1000, 1000], rxy=[0, 0])
         self.surf3.MoveSurface(ax2=self.surf3.axis)
         
+        self.run_beam()
+    
+    def run_beam(self):
+        pts = [self.beam.Location()]
+        print(self.beam.Location())
+        self.beam = self.Reflect(self.beam, self.surf1.face)
+        pts.append(self.beam.Location())
+        print(self.beam.Location())
+        self.beam_ray = make_polygon(pts)
+        
+    
+    def Reflect(self, beam=gp_Ax3(), surf=make_plane()):
+        h_surf = BRep_Tool.Surface(surf)
+        ray = Geom_Line(beam.Location(), beam.Direction()).GetHandle()
+        
+        """if GeomAPI_IntCS(ray, h_surf).NbPoints():
+            self.tar.beam = reflect(self.ini.beam, self.tar.srf)
+        else:
+            pln = make_plane(
+                self.tar.axs.Location(),
+                dir_to_vec(self.tar.axs.Direction()),
+                500, -500,
+                500, -500
+            )
+            self.tar.beam = reflect(self.ini.beam, pln)
+        
+        if GeomAPI_IntCS(ray, h_surf).NbPoints() == 0:
+            print("Out of Surface", beam.Location())
+            pln = make_plane(
+                beam.Location(), dir_to_vec(beam.Direction()), 500, -500, 500, -500
+            )
+            h_surf = BRep_Tool.Surface(pln)"""
+        
+        GeomAPI_IntCS(ray, h_surf).IsDone()
+        uvw = GeomAPI_IntCS(ray, h_surf).Parameters(1)
+        u, v, w = uvw
+        p1, vx, vy = gp_Pnt(), gp_Vec(), gp_Vec()
+        GeomLProp_SurfaceTool.D1(h_surf, u, v, p1, vx, vy)
+        vz = vx.Crossed(vy)
+        vx.Normalize()
+        vy.Normalize()
+        vz.Normalize()
+        norm = gp_Ax3(p1, vec_to_dir(vz), vec_to_dir(vx))
+        beam_v0 = beam
+        beam_v1 = beam_v0.Mirrored(norm.Ax2())
+        beam_v1.XReverse()
+        return beam_v1        
         
     def Display(self):
         self.display.DisplayShape(self.surf1.face)
         self.display.DisplayShape(self.surf2.face)
         self.display.DisplayShape(self.surf3.face, transparency=0.7, color="BLUE")
+        self.display.DisplayShape(self.beam_ray)
 
         self.show_axs_pln(self.axis, scale=10)
         self.show_axs_pln(self.surf1.axis, scale=20)
