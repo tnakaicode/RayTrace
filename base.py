@@ -125,15 +125,19 @@ class Face (object):
         self.MoveSurface(ax2=self.axis)
 
     def MoveSurface(self, ax1=gp_Ax3(), ax2=gp_Ax3()):
-        self.trsf = set_trf(ax1, ax2)
-        self.face.Move(TopLoc_Location(self.trsf))
+        trsf = set_trf(ax1, ax2)
+        self.face.Move(TopLoc_Location(trsf))
 
-    def rot_axs(self, axs=gp_Ax3(), rxyz=[0, 0, 0]):
+    def rot_axs(self, pxyz=[0, 0, 0], rxyz=[0, 0, 0]):
+        axs = gp_Ax3(gp_Pnt(*pxyz), gp_Dir(0,0,1))
         ax1 = gp_Ax1(self.axis.Location(), self.axis.XDirection())
         ax2 = gp_Ax1(self.axis.Location(), self.axis.YDirection())
         ax3 = gp_Ax1(self.axis.Location(), self.axis.Direction())
-        self.axis.Rotate(ax1, np.deg2rad(rxyz[0]))
-        self.axis.Rotate(ax2, np.deg2rad(rxyz[1]))
-        self.axis.Rotate(ax3, np.deg2rad(rxyz[2]))
-        self.MoveSurface(ax1=axs, ax2=self.axis)
-        #self.axis = axs
+        axs.Rotate(ax1, np.deg2rad(rxyz[0]))
+        axs.Rotate(ax2, np.deg2rad(rxyz[1]))
+        axs.Rotate(ax3, np.deg2rad(rxyz[2]))
+        trsf = set_trf(gp_Ax3(), axs)
+        self.axis.Transform(trsf)
+        self.face.Move(TopLoc_Location(trsf))
+        
+        
