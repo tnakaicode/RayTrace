@@ -12,32 +12,39 @@ from OCC.Geom import Geom_Line
 from OCC.GeomAPI import GeomAPI_IntCS
 from OCC.GeomLProp import GeomLProp_SurfaceTool
 from OCCUtils.Construct import vec_to_dir, dir_to_vec
+from OCCUtils.Construct import point_to_vector, vector_to_point
 from OCCUtils.Construct import make_plane, make_polygon
 
 from base import plotocc, Face, set_trf
 from Surface import surf_curv
 
+def move_pnt_to_dir(axs=gp_Ax3(), scale=100):
+    vec = point_to_vector(axs.Location()) + dir_to_vec(axs.Direction())*scale
+    return vector_to_point(vec)
+
 class TraceSystem (plotocc):
 
     def __init__(self):
         plotocc.__init__(self)
-        self.axis = gp_Ax3(gp_Pnt(1000, 1000, 100), gp_Dir(0, 0, 1))
+        self.axis = gp_Ax3(gp_Pnt(1000, 1000, 1000), gp_Dir(0, 0, 1))
         self.trsf = set_trf(ax2=self.axis)
         
         self.beam = gp_Ax3()
         self.beam.Transform(self.trsf)
 
-        ax1 = gp_Ax3(gp_Pnt(0, 0, 100), gp_Dir(0, 0, -1))
+        ax1 = gp_Ax3(gp_Pnt(0, 0, 500), gp_Dir(0, 0, -1))
         ax1.Transform(self.trsf)
         self.surf1 = Face(ax1)
+        self.surf1.face = surf_curv(lxy=[250, 250], rxy=[0, 0])
+        self.surf1.MoveSurface(ax2=self.surf1.axis)
         self.surf1.rot_axs(rxyz=[0, 45, 10])
 
-        ax2 = gp_Ax3(gp_Pnt(-500, 0, 100), gp_Dir(0, 0, 1))
+        ax2 = gp_Ax3(gp_Pnt(-500, 0, 500), gp_Dir(0, 0, 1))
         ax2.Transform(self.trsf)
         self.surf2 = Face(ax2)
-        self.surf2.face = surf_curv(lxy=[200, 150], rxy=[0, 0])
+        self.surf2.face = surf_curv(lxy=[350, 250], rxy=[0, 0])
         self.surf2.MoveSurface(ax2=self.surf2.axis)
-        self.surf2.rot_axs(pxyz=[0,0,10], rxyz=[0, 45, 10])
+        self.surf2.rot_axs(pxyz=[0,0,10], rxyz=[0, 45, -10])
         
         ax3 = gp_Ax3(gp_Pnt(-250, 0, 1000), gp_Dir(0, 0, 1))
         ax3.Transform(self.trsf)
@@ -49,10 +56,19 @@ class TraceSystem (plotocc):
     
     def run_beam(self):
         pts = [self.beam.Location()]
-        print(self.beam.Location())
+        
+        print(self.beam.Location(), dir_to_vec(self.beam.Direction()))
         self.beam = self.Reflect(self.beam, self.surf1.face)
         pts.append(self.beam.Location())
-        print(self.beam.Location())
+        
+        print(self.beam.Location(), dir_to_vec(self.beam.Direction()))
+        
+        self.beam = self.Reflect(self.beam, self.surf2.face)
+        pts.append(self.beam.Location())
+        
+        pnt = move_pnt_to_dir(self.beam, 1000)
+        pts.append(pnt)
+        
         self.beam_ray = make_polygon(pts)
         
     
@@ -89,6 +105,7 @@ class TraceSystem (plotocc):
         vz.Normalize()
         norm = gp_Ax3(p1, vec_to_dir(vz), vec_to_dir(vx))
         beam_v0 = beam
+        beam_v0.SetLocation(p1)
         beam_v1 = beam_v0.Mirrored(norm.Ax2())
         beam_v1.XReverse()
         return beam_v1        
