@@ -43,7 +43,7 @@ class TraceSystem (plotocc):
         self.surf2 = Face(ax2)
         self.surf2.face = surf_curv(lxy=[300, 200], rxy=[3000, -3000])
         self.surf2.MoveSurface(ax2=self.surf2.axis)
-        self.surf2.rot_axs(pxyz=[0, 0, 10], rxyz=[20, 60, 0])
+        self.surf2.rot_axs(pxyz=[0, -50, 10], rxyz=[20, 60, 0])
 
         ax3 = gp_Ax3(gp_Pnt(-750, 0, 1500), gp_Dir(0, 0, 1))
         ax3.Transform(self.trsf)
@@ -86,39 +86,23 @@ class TraceSystem (plotocc):
     def Reflect(self, beam=gp_Ax3(), surf=make_plane()):
         h_surf = BRep_Tool.Surface(surf)
         ray = Geom_Line(beam.Location(), beam.Direction()).GetHandle()
-
-        """if GeomAPI_IntCS(ray, h_surf).NbPoints():
-            self.tar.beam = reflect(self.ini.beam, self.tar.srf)
-        else:
-            pln = make_plane(
-                self.tar.axs.Location(),
-                dir_to_vec(self.tar.axs.Direction()),
-                500, -500,
-                500, -500
-            )
-            self.tar.beam = reflect(self.ini.beam, pln)
-        
         if GeomAPI_IntCS(ray, h_surf).NbPoints() == 0:
-            print("Out of Surface", beam.Location())
-            pln = make_plane(
-                beam.Location(), dir_to_vec(beam.Direction()), 500, -500, 500, -500
-            )
-            h_surf = BRep_Tool.Surface(pln)"""
-
-        GeomAPI_IntCS(ray, h_surf).IsDone()
-        uvw = GeomAPI_IntCS(ray, h_surf).Parameters(1)
-        u, v, w = uvw
-        p1, vx, vy = gp_Pnt(), gp_Vec(), gp_Vec()
-        GeomLProp_SurfaceTool.D1(h_surf, u, v, p1, vx, vy)
-        vz = vx.Crossed(vy)
-        vx.Normalize()
-        vy.Normalize()
-        vz.Normalize()
-        norm = gp_Ax3(p1, vec_to_dir(vz), vec_to_dir(vx))
-        beam_v0 = beam
-        beam_v0.SetLocation(p1)
-        beam_v1 = beam_v0.Mirrored(norm.Ax2())
-        beam_v1.XReverse()
+            beam_v1 = beam
+        else:
+            GeomAPI_IntCS(ray, h_surf).IsDone()
+            uvw = GeomAPI_IntCS(ray, h_surf).Parameters(1)
+            u, v, w = uvw
+            p1, vx, vy = gp_Pnt(), gp_Vec(), gp_Vec()
+            GeomLProp_SurfaceTool.D1(h_surf, u, v, p1, vx, vy)
+            vz = vx.Crossed(vy)
+            vx.Normalize()
+            vy.Normalize()
+            vz.Normalize()
+            norm = gp_Ax3(p1, vec_to_dir(vz), vec_to_dir(vx))
+            beam_v0 = beam
+            beam_v0.SetLocation(p1)
+            beam_v1 = beam_v0.Mirrored(norm.Ax2())
+            beam_v1.XReverse()
         return beam_v1
 
     def Display(self):
