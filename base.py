@@ -27,6 +27,7 @@ import logging
 logging.getLogger('matplotlib').setLevel(logging.ERROR)
 
 from Surface import surf_curv
+from OCCQt import Viewer
 
 
 def pnt_trf_vec(pnt=gp_Pnt(), vec=gp_Vec()):
@@ -77,10 +78,12 @@ def rot_axs(axis=gp_Ax3(), pxyz=[0, 0, 0], rxyz=[0, 0, 0]):
     trsf = set_trf(gp_Ax3(), axs)
     axis.Transform(trsf)
 
-class plotocc (object):
+class plotocc (Viewer):
 
     def __init__(self):
         self.display, self.start_display, self.add_menu, self.add_functionto_menu = init_display()
+        Viewer.__init__(self)
+        self.on_select()
 
     def show_box(self):
         self.display.DisplayShape(gp_Pnt())
