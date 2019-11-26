@@ -8,11 +8,18 @@ from optparse import OptionParser
 from OCC.gp import gp_Pnt, gp_Vec, gp_Dir
 from OCC.gp import gp_Ax1, gp_Ax2, gp_Ax3
 from OCC.BRep import BRep_Tool
+from OCC.BRepTools import BRepTools_GTrsfModification
+from OCC.BRepCheck import BRepCheck_Shell
+from OCC.BRepBuilderAPI import BRepBuilderAPI_Collect, BRepBuilderAPI_LineThroughIdenticPoints
+from OCC.BRepAlgoAPI import BRepAlgoAPI_Common
 from OCC.BRepPrimAPI import BRepPrimAPI_MakeBox
 from OCC.Geom import Geom_Line
 from OCC.GeomAPI import GeomAPI_IntCS
 from OCC.GeomLProp import GeomLProp_SurfaceTool
+from OCC.ShapeAlgo import ShapeAlgo_ToolContainer
 from OCC.IntAna import IntAna_Line
+from OCC.IntCurveSurface import IntCurveSurface_In
+from OCC.IntPatch import IntPatch_TheSearchInside
 from OCCUtils.Construct import vec_to_dir, dir_to_vec
 from OCCUtils.Construct import point_to_vector, vector_to_point
 from OCCUtils.Construct import make_plane, make_polygon, make_box
