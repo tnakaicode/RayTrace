@@ -5,12 +5,12 @@ import os
 import scipy.constants as cnt
 from optparse import OptionParser
 
-from OCC.Coregp import gp_Pnt, gp_Vec, gp_Dir
-from OCC.Coregp import gp_Ax1, gp_Ax2, gp_Ax3
-from OCC.CoreBRep import BRep_Tool
-from OCC.CoreGeom import Geom_Line
-from OCC.CoreGeomAPI import GeomAPI_IntCS
-from OCC.CoreGeomLProp import GeomLProp_SurfaceTool
+from OCC.Core.gp import gp_Pnt, gp_Vec, gp_Dir
+from OCC.Core.gp import gp_Ax1, gp_Ax2, gp_Ax3
+from OCC.Core.BRep import BRep_Tool
+from OCC.Core.Geom import Geom_Line
+from OCC.Core.GeomAPI import GeomAPI_IntCS
+from OCC.Core.GeomLProp import GeomLProp_SurfaceTool
 from OCCUtils.Construct import vec_to_dir, dir_to_vec
 from OCCUtils.Construct import point_to_vector, vector_to_point
 from OCCUtils.Construct import make_plane, make_polygon

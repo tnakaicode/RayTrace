@@ -12,20 +12,20 @@ from scipy.integrate import simps
 from scipy.constants import *
 
 from OCC.Display.SimpleGui import init_display
-from OCC.Coregp import gp_Pnt, gp_Ax1, gp_Ax3, gp_Vec, gp_Dir
-from OCC.Coregp import gp_Trsf, gp_Quaternion, gp_Pln
-from OCC.CoreTColgp import TColgp_Array2OfPnt, TColgp_Array1OfPnt
-from OCC.CoreGeom import Geom_BSplineSurface, Handle_Geom_BSplineSurface
-from OCC.CoreGeom import Geom_Surface, Handle_Geom_Surface
-from OCC.CoreGeomAPI import GeomAPI_PointsToBSplineSurface
-from OCC.CoreGeomAPI import GeomAPI_PointsToBSpline
-from OCC.CoreGeomAPI import GeomAPI_ProjectPointOnSurf
-from OCC.CoreGeomAbs import GeomAbs_C2, GeomAbs_C0, GeomAbs_G1, GeomAbs_G2
-from OCC.CoreTopoDS import TopoDS_Shape, TopoDS_Shell
-from OCC.CoreTopLoc import TopLoc_Location
-from OCC.CoreBRep import BRep_Tool_Surface, BRep_Builder
-from OCC.CoreBRepBuilderAPI import BRepBuilderAPI_MakeFace
-from OCC.CoreBRepExtrema import BRepExtrema_DistShapeShape
+from OCC.Core.gp import gp_Pnt, gp_Ax1, gp_Ax3, gp_Vec, gp_Dir
+from OCC.Core.gp import gp_Trsf, gp_Quaternion, gp_Pln
+from OCC.Core.TColgp import TColgp_Array2OfPnt, TColgp_Array1OfPnt
+from OCC.Core.Geom import Geom_BSplineSurface, Handle_Geom_BSplineSurface
+from OCC.Core.Geom import Geom_Surface, Handle_Geom_Surface
+from OCC.Core.GeomAPI import GeomAPI_PointsToBSplineSurface
+from OCC.Core.GeomAPI import GeomAPI_PointsToBSpline
+from OCC.Core.GeomAPI import GeomAPI_ProjectPointOnSurf
+from OCC.Core.GeomAbs import GeomAbs_C2, GeomAbs_C0, GeomAbs_G1, GeomAbs_G2
+from OCC.Core.TopoDS import TopoDS_Shape, TopoDS_Shell
+from OCC.Core.TopLoc import TopLoc_Location
+from OCC.Core.BRep import BRep_Tool_Surface, BRep_Builder
+from OCC.Core.BRepBuilderAPI import BRepBuilderAPI_MakeFace
+from OCC.Core.BRepExtrema import BRepExtrema_DistShapeShape
 from OCCUtils.Construct import make_plane, make_line, make_wire, make_edge
 from OCCUtils.Construct import vec_to_dir
 from OCCUtils.Topology import Topo, dumpTopology

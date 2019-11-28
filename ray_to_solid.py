@@ -5,21 +5,21 @@ import os
 import scipy.constants as cnt
 from optparse import OptionParser
 
-from OCC.Coregp import gp_Pnt, gp_Vec, gp_Dir
-from OCC.Coregp import gp_Ax1, gp_Ax2, gp_Ax3
-from OCC.CoreBRep import BRep_Tool
-from OCC.CoreBRepTools import BRepTools_GTrsfModification
-from OCC.CoreBRepCheck import BRepCheck_Shell
-from OCC.CoreBRepBuilderAPI import BRepBuilderAPI_Collect, BRepBuilderAPI_LineThroughIdenticPoints
-from OCC.CoreBRepAlgoAPI import BRepAlgoAPI_Common
-from OCC.CoreBRepPrimAPI import BRepPrimAPI_MakeBox
-from OCC.CoreGeom import Geom_Line
-from OCC.CoreGeomAPI import GeomAPI_IntCS
-from OCC.CoreGeomLProp import GeomLProp_SurfaceTool
-from OCC.CoreShapeAlgo import ShapeAlgo_ToolContainer
-from OCC.CoreIntAna import IntAna_Line
-from OCC.CoreIntCurveSurface import IntCurveSurface_In
-from OCC.CoreIntPatch import IntPatch_TheSearchInside
+from OCC.Core.gp import gp_Pnt, gp_Vec, gp_Dir
+from OCC.Core.gp import gp_Ax1, gp_Ax2, gp_Ax3
+from OCC.Core.BRep import BRep_Tool
+from OCC.Core.BRepTools import BRepTools_GTrsfModification
+from OCC.Core.BRepCheck import BRepCheck_Shell
+from OCC.Core.BRepBuilderAPI import BRepBuilderAPI_Collect, BRepBuilderAPI_LineThroughIdenticPoints
+from OCC.Core.BRepAlgoAPI import BRepAlgoAPI_Common
+from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeBox
+from OCC.Core.Geom import Geom_Line
+from OCC.Core.GeomAPI import GeomAPI_IntCS
+from OCC.Core.GeomLProp import GeomLProp_SurfaceTool
+from OCC.Core.ShapeAlgo import ShapeAlgo_ToolContainer
+from OCC.Core.IntAna import IntAna_Line
+from OCC.Core.IntCurveSurface import IntCurveSurface_In
+from OCC.Core.IntPatch import IntPatch_TheSearchInside
 from OCCUtils.Construct import vec_to_dir, dir_to_vec
 from OCCUtils.Construct import point_to_vector, vector_to_point
 from OCCUtils.Construct import make_plane, make_polygon, make_box

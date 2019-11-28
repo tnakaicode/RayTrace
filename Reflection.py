@@ -1,18 +1,18 @@
 import numpy as np
 from linecache import getline, clearcache
 
-from OCC.Coregp import gp_Pnt, gp_Vec, gp_Dir
-from OCC.Coregp import gp_Ax1, gp_Ax2, gp_Ax3
-from OCC.Coregp import gp_Pln, gp_Lin
-from OCC.CoreBRep import BRep_Tool
-from OCC.CoreGeom import Geom_Plane, Geom_Surface, Geom_BSplineSurface
-from OCC.CoreGeom import Geom_Curve, Geom_Line, Geom_Ellipse
-from OCC.CoreGeomAPI import GeomAPI_PointsToBSplineSurface, GeomAPI_IntCS
-from OCC.CoreGeomAbs import GeomAbs_C2, GeomAbs_C0, GeomAbs_G1, GeomAbs_G2
-from OCC.CoreGeomLProp import GeomLProp_SurfaceTool
-from OCC.CoreTColgp import TColgp_Array1OfPnt, TColgp_Array2OfPnt
-from OCC.CoreGeomProjLib import geomprojlib_Project
-from OCC.CoreBRepBuilderAPI import BRepBuilderAPI_MakeFace
+from OCC.Core.gp import gp_Pnt, gp_Vec, gp_Dir
+from OCC.Core.gp import gp_Ax1, gp_Ax2, gp_Ax3
+from OCC.Core.gp import gp_Pln, gp_Lin
+from OCC.Core.BRep import BRep_Tool
+from OCC.Core.Geom import Geom_Plane, Geom_Surface, Geom_BSplineSurface
+from OCC.Core.Geom import Geom_Curve, Geom_Line, Geom_Ellipse
+from OCC.Core.GeomAPI import GeomAPI_PointsToBSplineSurface, GeomAPI_IntCS
+from OCC.Core.GeomAbs import GeomAbs_C2, GeomAbs_C0, GeomAbs_G1, GeomAbs_G2
+from OCC.Core.GeomLProp import GeomLProp_SurfaceTool
+from OCC.Core.TColgp import TColgp_Array1OfPnt, TColgp_Array2OfPnt
+from OCC.Core.GeomProjLib import geomprojlib_Project
+from OCC.Core.BRepBuilderAPI import BRepBuilderAPI_MakeFace
 from OCCUtils.Construct import dir_to_vec, vec_to_dir
 from OCCUtils.Construct import project_edge_onto_plane
 
