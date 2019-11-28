@@ -2,9 +2,9 @@ import sys
 import time
 import os
 
-from OCC.BRep import BRep_Tool
-from OCC.TopAbs import TopAbs_VERTEX
-from OCC.TopoDS import TopoDS_Iterator, topods_Vertex
+from OCC.CoreBRep import BRep_Tool
+from OCC.CoreTopAbs import TopAbs_VERTEX
+from OCC.CoreTopoDS import TopoDS_Iterator, topods_Vertex
 from OCCUtils.Topology import TopExp_Explorer, shapeTypeString
 #from OCC.Extend.TopologyUtils import TopologyExplorer, get_type_as_string
 
