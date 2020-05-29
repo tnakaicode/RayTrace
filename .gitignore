@@ -6,5 +6,7 @@ __pycache__/
 *.py[cod]
 *.pyc[cod]
 
-# tmp
+# Temp
 tmp/*
+temp_*/*
+*/temp_*/*
