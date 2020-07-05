@@ -75,7 +75,7 @@ class TraceSystem (plotocc):
 
     def Reflect(self, beam=gp_Ax3(), surf=make_plane()):
         h_surf = BRep_Tool.Surface(surf)
-        ray = Geom_Line(beam.Location(), beam.Direction()).GetHandle()
+        ray = Geom_Line(beam.Location(), beam.Direction())
         if GeomAPI_IntCS(ray, h_surf).NbPoints() == 0:
             beam_v1 = beam
         else:

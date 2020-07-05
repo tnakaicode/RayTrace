@@ -224,7 +224,7 @@ def rot_axs(axis=gp_Ax3(), pxyz=[0, 0, 0], rxyz=[0, 0, 0]):
 class plotocc (Viewer, SetDir):
 
     def __init__(self):
-        self.display, self.start_display, self.add_menu, self.add_functionto_menu = init_display()
+        self.display, self.start_display, self.add_menu, self.add_function = init_display()
         SetDir.__init__(self)
         Viewer.__init__(self)
         self.on_select()
