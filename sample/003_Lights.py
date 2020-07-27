@@ -11,7 +11,6 @@ logging.getLogger('matplotlib').setLevel(logging.CRITICAL)
 import functools
 import numpy as np
 import matplotlib.pyplot as plt
-get_ipython().run_line_magic('matplotlib', 'inline')
 from pvtrace import *
 
 
