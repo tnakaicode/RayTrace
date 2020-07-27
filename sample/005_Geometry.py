@@ -2,23 +2,23 @@
 # coding: utf-8
 
 # # Geometry
-# 
+#
 # This notebook demonstrates the different geometry objects available in pvtrace.
-# 
+#
 # ## Sphere
-# 
+#
 # A sphere defined by a radius.
-# 
+#
 # ## Cylinder
-# 
+#
 # A cylinder with end caps defined by a radius and a length.
-# 
+#
 # ## Box
-# 
+#
 # A box defined by length of the sides.
-# 
+#
 # ## Mesh
-# 
+#
 # Any arbitrary mesh can be loaded into pvtrace and traced. However the mesh must be closed for the ray tracing algorithms to work.
 
 # In[3]:
@@ -85,7 +85,3 @@ vis.vis.jupyter_cell()
 
 
 # In[ ]:
-
-
-
-

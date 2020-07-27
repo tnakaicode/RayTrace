@@ -14,9 +14,9 @@ from tutorial_support import interact_ray
 
 
 # # Interactive ray tracing example
-# 
+#
 # Let's make a scene and use ipython widgets to move the starting point of rays.
-# 
+#
 # All scenes must have a **world node** which contains all other objects.
 
 # In[2]:
@@ -41,13 +41,13 @@ scene = Scene(world)
 
 
 # The scene is a large world sphere containing air with a smaller glass sphere inside and at the centre.
-# 
+#
 # ---
-# 
+#
 # **Units**
-# 
+#
 # *pvtrace* does *not* assume units, they could be metres, kilometres or lightyears.
-# 
+#
 # ---
 
 # Use the MeshCat renderer to view the scene directly in the Jupyter notebook. The simplest scene just contains a Ray.
@@ -79,11 +79,11 @@ ray = Ray(
 
 
 # and every time the one of the slides changes and retraces the scene.
-# 
+#
 # Rays are a simple data structure containing `position`, `direction` and `wavelength`.
 
 # ## Getting trace data
-# 
+#
 # Use the `follow` function, from the `photon_tracer` module, to get a list of interaction points and event types that a ray made with the scene.
 
 # In[6]:
@@ -109,7 +109,7 @@ r, e = steps[1]
 f"{e.name}: {r}"
 
 
-# The ray hits the small glass sphere and is transmitted. 
+# The ray hits the small glass sphere and is transmitted.
 
 # In[9]:
 
@@ -121,7 +121,7 @@ f"{e.name}: {r}"
 # Finally the ray exits the scene by hitting the world sphere.
 
 # Full list of events is described by the enum,
-# 
+#
 # ```python
 # class Event(Enum):
 #     GENERATE = 0

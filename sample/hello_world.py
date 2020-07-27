@@ -24,7 +24,7 @@ sphere.location = (0, 0, 2)
 
 light = Node(
     name="Light (555nm)",
-    light=Light(direction=functools.partial(cone, np.pi/8)),
+    light=Light(direction=functools.partial(cone, np.pi / 8)),
     parent=world
 )
 
