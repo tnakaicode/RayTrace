@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 35
+/svn/!svn/ver/65/trunk/cuda_cpp/src
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/!svn/ver/63/trunk/cuda_cpp/src/Makefile
+END
+old_solver.cu
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/!svn/ver/47/trunk/cuda_cpp/src/old_solver.cu
+END
+rhs.cu
+K 25
+svn:wc:ra_dav:version-url
+V 42
+/svn/!svn/ver/47/trunk/cuda_cpp/src/rhs.cu
+END
+gode.h
+K 25
+svn:wc:ra_dav:version-url
+V 42
+/svn/!svn/ver/60/trunk/cuda_cpp/src/gode.h
+END
+gode.cu
+K 25
+svn:wc:ra_dav:version-url
+V 43
+/svn/!svn/ver/65/trunk/cuda_cpp/src/gode.cu
+END
+evolve.cu
+K 25
+svn:wc:ra_dav:version-url
+V 45
+/svn/!svn/ver/63/trunk/cuda_cpp/src/evolve.cu
+END
+harmonic.cu
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/!svn/ver/47/trunk/cuda_cpp/src/harmonic.cu
+END
