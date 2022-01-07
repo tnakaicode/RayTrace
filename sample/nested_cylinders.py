@@ -62,13 +62,14 @@ light.translate((0, 0, -1))
 #light.rotate(np.pi/2, (1, 0, 0))
 
 # Use meshcat to render the scene (optional)
-viewer = MeshcatRenderer(open_browser=True, transparency=False, opacity=0.5, wireframe=True)
+viewer = MeshcatRenderer(
+    open_browser=True, transparency=False, opacity=0.5, wireframe=True)
 scene = Scene(world)
 viewer.render(scene)
 for ray in scene.emit(100):
     history = photon_tracer.follow(scene, ray)
     path, events = zip(*history)
-    viewer.add_ray_path(path)  
+    viewer.add_ray_path(path)
 
 # Keep the script alive until Ctrl-C (optional)
 while True:

@@ -132,24 +132,13 @@
 #
 # The intersection points with $t<0$ and points not contained inside the circle of the end cap are rejected using $(x^2 + y^2) < R$, where $x$ and $y$ are the components of the candidate intersection point.
 
-# In[1]:
-
 
 import numpy as np
 from sympy import *
-init_printing()
-
-
-# In[2]:
 
 
 xE, yE, xD, yD, t, R = var("x_E y_E x_D y_D t R")
 sols = solve(Eq((xE + t * xD)**2 + (yE + t * yD)**2, R**2), t)
-sols
-
-
-# In[3]:
-
 
 pos = np.array([0, 0, 0.5])
 uvec = np.array([0.9, 0, 0.01])
@@ -157,11 +146,6 @@ uvec = uvec / np.linalg.norm(uvec)
 radius = 1.0
 tsols = [float(asol.subs({xE: pos[0], yE: pos[1], xD: uvec[0], yD: uvec[1], R: radius}))
          for asol in sols]
-tsols
-
-
-# In[4]:
-
 
 L = 1
 ipoints = [np.array(pos + t * uvec) for t in tsols if t > 0]
@@ -187,8 +171,6 @@ ipoints
 
 # If the intersection point lies inside a cap circle then we include the intersection point in the list.
 
-# In[5]:
-
 
 cap_ipoints = []
 for z in (0.0, L):
@@ -198,10 +180,6 @@ for z in (0.0, L):
             point = np.array(pos + t * uvec)
             if np.sqrt(point[0]**2 + point[1]**2) < radius:
                 cap_ipoints.append(point)
-cap_ipoints
-
-
-# In[6]:
 
 
 def ray_z_cylinder(length, radius, ray_origin, ray_direction):
@@ -416,9 +394,6 @@ def ray_z_cylinder(length, radius, ray_origin, ray_direction):
     return points
 
 
-# In[7]:
-
-
 import numpy as np
 import meshcat
 import meshcat.geometry as g
@@ -431,6 +406,7 @@ def norm(v):
 
 
 vis.delete()
+length = 10
 # touching
 ray_origin = (0.0, 0.0, -1.5)
 ray_direction = norm((0.0, 1.0, 1.0))
@@ -490,5 +466,10 @@ for idx, (ray_origin, ray_direction, expected) in enumerate(tests):
         print("OK!")
 vis.jupyter_cell()
 
-
-# In[ ]:
+import time
+# Keep the script alive until Ctrl-C (optional)
+while True:
+    try:
+        time.sleep(0.1)
+    except KeyboardInterrupt:
+        break
