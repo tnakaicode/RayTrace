@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[3]:
-
 
 import logging
 logging.getLogger('trimesh').disabled = True
@@ -10,7 +8,7 @@ logging.getLogger('shapely.geos').disabled = True
 logging.getLogger('matplotlib').setLevel(logging.CRITICAL)
 import numpy as np
 import matplotlib.pyplot as plt
-from pvtrace import *
+from pvtrace import Node, Sphere, Material, Scene, MeshcatRenderer, Ray, photon_tracer, lumogen_f_red_305, Luminophore, isotropic, Absorber
 
 
 # # Materials
@@ -121,8 +119,6 @@ from pvtrace import *
 # Use the `absorption` and `emission` functions,
 #
 
-# In[7]:
-
 
 x = np.linspace(200, 800, 200)  # wavelength, units: nm
 absorption_spectrum = lumogen_f_red_305.absorption(x)  # units: nm-1
@@ -135,8 +131,6 @@ plt.grid(linestyle="dotted")
 
 
 # The absorption spectrum is normalised to one so that it is easy to convert to unit you wish. Let's say units of length is now in centimetres as we construct the scene.
-
-# In[30]:
 
 
 world = Node(
@@ -180,7 +174,7 @@ for _ in range(10):
     path, decisions = zip(*steps)
     vis.add_ray_path(path)
 vis.vis.jupyter_cell()
-
+plt.show()
 
 # Multiple components can be added simultaneously,
 #

@@ -21,13 +21,11 @@
 #
 # Any arbitrary mesh can be loaded into pvtrace and traced. However the mesh must be closed for the ray tracing algorithms to work.
 
-# In[3]:
-
 
 import logging
 logging.getLogger('pvtrace').setLevel(logging.CRITICAL)
 logging.getLogger('trimesh').setLevel(logging.CRITICAL)
-from pvtrace import *
+from pvtrace import Node, Sphere, Material, Scene, MeshcatRenderer, Ray, photon_tracer, lumogen_f_red_305, Luminophore, isotropic, Absorber, Light, cone, Distribution, Box, Cylinder, Mesh
 import trimesh
 
 
@@ -82,6 +80,4 @@ scene = Scene(world)
 vis = MeshcatRenderer(wireframe=True)
 vis.render(scene)
 vis.vis.jupyter_cell()
-
-
-# In[ ]:
+vis.vis.open()

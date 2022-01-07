@@ -1,17 +1,17 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
-
 
 import logging
 logging.getLogger('trimesh').disabled = True
 logging.getLogger('shapely.geos').disabled = True
 logging.getLogger('matplotlib').setLevel(logging.CRITICAL)
+import os
+import sys
 import functools
 import numpy as np
 import matplotlib.pyplot as plt
-from pvtrace import *
+from pvtrace import Node, Sphere, Material, Scene, MeshcatRenderer, Ray, photon_tracer, lumogen_f_red_305, Luminophore, isotropic, Absorber, Light, cone, Distribution, Box, Cylinder, Mesh, FresnelSurfaceDelegate, Surface, rectangular_mask
 
 
 # # Surface coatings
@@ -41,8 +41,6 @@ from pvtrace import *
 # ![coatings.png](attachment:coatings.png)
 #
 # To demonstate how to use `SurfaceDelegate` we will make a plastic slab with a perfect mirrors on a small section of the top surface. All other surface are uncoated an obey the Fresnel equations. Behind the scene Frensel reflection and refraction is actually implemented using this delegate approach so we inherit from `FresnelSurfaceDelegate` and will extend it for our purpose.
-
-# In[17]:
 
 
 class PartialTopSurfaceMirror(FresnelSurfaceDelegate):
@@ -86,8 +84,6 @@ class PartialTopSurfaceMirror(FresnelSurfaceDelegate):
 
 
 # Make a scene and add the surface coating.
-
-# In[19]:
 
 
 world = Node(
@@ -157,8 +153,6 @@ vis.vis.jupyter_cell()
 # ```
 #
 # which we can verify from running a the following,
-
-# In[22]:
 
 
 world = Node(

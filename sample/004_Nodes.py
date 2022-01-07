@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[22]:
-
 
 import logging
 logging.getLogger("pvtrace").setLevel(logging.CRITICAL)
@@ -13,7 +11,7 @@ import numpy as np
 import functools
 import matplotlib
 import matplotlib.pyplot as plt
-from pvtrace import *
+from pvtrace import Node, Sphere, Material, Scene, MeshcatRenderer, Ray, photon_tracer, lumogen_f_red_305, Luminophore, isotropic, Absorber, Light, cone, Distribution, Box
 
 
 # # Nodes
@@ -23,8 +21,6 @@ from pvtrace import *
 # They have `translate(dx, dy, dz)` and `rotate(angle, axis)` method which apply to the current pose.
 #
 # Let's place the glass box so that the centre is at (1, 1, 1).
-
-# In[23]:
 
 
 world = Node(
@@ -52,8 +48,6 @@ vis.vis.jupyter_cell()
 
 # Add some widgets for changing the box's location. The sliders change the location tuple of the box node.
 
-# In[24]:
-
 
 from ipywidgets import interact
 import ipywidgets as widgets
@@ -77,18 +71,14 @@ vis.vis.jupyter_cell()
 #
 # The above sliders are using the box `location` property to set the location of the box in the scene. Here we also need to call the visualisers `update_transform` method to tell it about the change.
 
-# In[25]:
-
 
 box.location = (-2, 0.0, 0.5)
-vis.update_transform(box)  # tell the renderer is need to re-draw
+# vis.vis.set_transform(box)  # tell the renderer is need to re-draw
 
 
 # ## Nested nodes
 #
 # An important concept in *pvtrace* is that nodes are nestable and the parent transformation applies defines the childs coordinate system.
-
-# In[27]:
 
 
 world = Node(
@@ -137,6 +127,3 @@ scene = Scene(world)
 vis = MeshcatRenderer(wireframe=True)
 vis.render(scene)
 vis.vis.jupyter_cell()
-
-
-# In[ ]:
