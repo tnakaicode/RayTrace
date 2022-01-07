@@ -2,7 +2,7 @@
 #      dy/dt = f(y,t) + (stochastic noise)
 # ------------
 # 15 July 2008 : Dhruba
-# -------------------------%------------------
+# ----------------------
 """ Evolves in time N differential equation of the
   form :   dy/dt = f(y,t) + (stochastic noise)"""
 # First import the needed modules
@@ -106,7 +106,7 @@ def main():
         if len(os.listdir('snaps')) > 0:
             confirm = 'x'
             while (confirm != 'n') and (confirm != 'y'):
-                confirm = raw_input(
+                confirm = input(
                     'Snaps directory is not empty, continue? (y/n):')
             if confirm == 'n':
                 sys.exit()

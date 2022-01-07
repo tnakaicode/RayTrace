@@ -1,9 +1,15 @@
 import numpy as np
-import noise
+import os
+import sys
 from pylab import *
 from mpl_toolkits.mplot3d import Axes3D
 
-# ---------------------
+sys.path.append(os.path.join("../"))
+from base import plot2d
+import Trajectory.noise as noise
+import Trajectory.technical as technical
+
+
 Bfield = 'ABC_c'
 Nparticle = 1024
 # m=1.5
@@ -22,7 +28,6 @@ pstride = ddim
 N = Nparticle * (ddim)
 f = np.zeros(N)
 y0 = np.zeros(N)
-# ---------------------
 
 
 def model(y, t, dt, istep):

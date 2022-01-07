@@ -8,10 +8,10 @@ from mpl_toolkits.mplot3d import Axes3D
 
 sys.path.append(os.path.join("../"))
 from base import plot2d
-import PlotTrajectory.noise as noise
-import PlotTrajectory.technical as technical
+import Trajectory.noise as noise
+import Trajectory.technical as technical
 
-# ---------------------
+
 # Bfield='ABC_c';
 Bfield = 'ABC'
 A = 1.
@@ -35,7 +35,6 @@ pstride = ddim
 N = Nparticle * (ddim)
 f = np.zeros(N)
 y0 = np.zeros(N)
-# ---------------------
 
 
 def model(y, t, dt, istep):

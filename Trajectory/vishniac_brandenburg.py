@@ -7,9 +7,9 @@ import time
 
 sys.path.append(os.path.join("../"))
 from base import plot2d
-import PlotTrajectory.noise as noise
+import Trajectory.noise as noise
 
-# ---------------------
+
 variable = 2
 Nensemble = 100
 N = variable * Nensemble
@@ -22,7 +22,6 @@ Shear = 10.
 k = 1.
 alpha_mean = 0
 alpha_var = 0.1
-# ---------------------
 
 
 def Smodel(y, t, dt, istep):

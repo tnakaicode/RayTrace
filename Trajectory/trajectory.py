@@ -8,10 +8,10 @@ from mpl_toolkits.mplot3d import Axes3D
 
 sys.path.append(os.path.join("../"))
 from base import plot2d
-import PlotTrajectory.noise as noise
-import PlotTrajectory.technical as technical
+import Trajectory.noise as noise
+import Trajectory.technical as technical
 
-# ---------------------
+
 Bfield = "dipole"
 Nparticle = 1
 m = 200
@@ -148,7 +148,7 @@ def diagnostic(y, t, counter, fname, ldiag2file):
 # else:
 # 13
 # print t, x[0], x[1], x[2], rsqr, mFTLE
-# ---------------------
+
 # A.2 Other Files
 # For the access to the rest of the code, see http: // code.google.com / p / pyoden / source/
 # browse/  # svn%2Ftrunk. It might be particularly useful to look at odeN.py, where the step

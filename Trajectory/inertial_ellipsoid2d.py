@@ -30,7 +30,7 @@ alpha0 = (rad_lambda**2 / lambda2_minus_1) + (1. / 2.) * log((rad_lambda - sqrt_
 # the next expression is not the same in Zhang et al and Mortensen et al. There is an overall problem with sign. I do not see how
 # gamma0 can be negative taken from Jeffery's paper, hence we have taken the expression of Mortensen et al.
 gamma0 = (2. / lambda2_minus_1) + np.log((rad_lambda - sqrt_lambda2_minus_1) /
-                                      (rad_lambda - sqrt_lambda2_minus_1)) * (rad_lambda / (lambda2_minus_1)**(3. / 2.))
+                                         (rad_lambda - sqrt_lambda2_minus_1)) * (rad_lambda / (lambda2_minus_1)**(3. / 2.))
 pdenom = alpha0 + gamma0 * rad_lambda**2
 prefactor = (16. / 3.) * np.pi * mu * rad_lambda * radA**3 / pdenom
 # ---- the I_zz for such an ellisoid ------
@@ -59,7 +59,6 @@ pstride = ddim
 N = Nparticle * (ddim)
 f = np.zeros(N)
 y0 = np.zeros(N)
-# ---------------------
 
 
 def model(y, t, dt, istep):
@@ -97,7 +96,7 @@ def model(y, t, dt, istep):
         f[ip * pstride + 2 * dim + 1:ip * pstride + 2 * dim + 2] = Jeffery_N
     # print f
     return f
-# ---------------------
+
 #************************************#
 
 
@@ -110,12 +109,10 @@ def rot_matrix2d(AA, theta):
     Arot = np.dot(AA, Rot)
     Arot = np.dot(np.transpose(Rot), Arot)
     return Arot
-# ---------------------
 
 
 def dimension():
     return N
-# ---------------------
 
 
 def modsqr(A):
@@ -124,7 +121,6 @@ def modsqr(A):
     for ix in range(0, size):
         xx = xx + A[ix] * A[ix]
     return xx
-# ---------------------
 
 
 def vel(x, der):
@@ -147,7 +143,6 @@ def vel(x, der):
         return ufield
     else:
         return ufield, omega, strain
-# ---------------------
 
 
 def Roberts_xy(x):
@@ -165,7 +160,6 @@ def Roberts_xy(x):
     Sij = (0.5) * (dUU + np.transpose(dUU))
     omega = dUU[0, 1] - dUU[1, 0]
     return UU, omega * kk, Sij * kk
-# ---------------------
 
 
 def ABC(x):
@@ -187,7 +181,6 @@ def ABC(x):
     dBB[2, 1] = cos(kk * yy)
     dBB[2, 2] = 0
     return BB, dBB * kk
-# ---------------------
 
 
 def iniconf(lparam2file):
@@ -206,9 +199,8 @@ def iniconf(lparam2file):
     if lparam2file == 1:
         fname.write(str(St) + "\n")
     else:
-        print ('St=', St)
+        print('St=', St)
     return y0
-# ---------------------
 
 
 def getW4plot(x0=0, y0=0, x1=2 * pi, y1=2 * pi, Ngrid=64):
@@ -225,7 +217,6 @@ def getW4plot(x0=0, y0=0, x1=2 * pi, y1=2 * pi, Ngrid=64):
             UU, curlu, Sij = vel(xvec, 1)
             WW[igrid, jgrid] = curlu
     return xx, yy, WW
-# ---------------------
 
 
 def diagnostic(y, t, counter, fname, ldiag2file):
@@ -256,4 +247,3 @@ def diagnostic(y, t, counter, fname, ldiag2file):
         print("current tstep: " + str(t))
     else:
         print(t, x[0], x[1], theta)
-# ---------------------

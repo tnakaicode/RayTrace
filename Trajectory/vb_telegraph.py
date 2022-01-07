@@ -7,9 +7,9 @@ import time
 
 sys.path.append(os.path.join("../"))
 from base import plot2d
-import PlotTrajectory.noise as noise
+import Trajectory.noise as noise
 
-# ---------------------
+
 variable = 2
 Nensemble = 1024
 N = variable * Nensemble
@@ -22,7 +22,6 @@ alpha0 = np.sqrt(1. / tc)
 nu = 1. / tc
 tcounter = np.zeros(Nensemble)
 alpha = alpha0 * np.ones(Nensemble)
-# ---------------------
 
 
 def model(y, t, dt, istep):
