@@ -111,4 +111,4 @@ if __name__ == "__main__":
 
     obj = TraceSystem()
     obj.Display()
-    obj.show()
+    obj.show_occ()
