@@ -2446,4 +2446,5 @@ class OCCSurfObj(object):
 
 
 if __name__ == '__main__':
-    create_tempdir(flag=-1)
+    tmpdir = create_tempdir(flag=-1)
+    print(tmpdir)
