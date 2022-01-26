@@ -28,7 +28,7 @@ from OCC.Core.IntPatch import IntPatch_TheSearchInside
 from OCC.Extend.ShapeFactory import measure_shape_volume, measure_shape_mass_center_of_gravity
 from OCCUtils.Construct import vec_to_dir, dir_to_vec
 from OCCUtils.Construct import point_to_vector, vector_to_point
-from OCCUtils.Construct import make_plane, make_polygon, make_box
+from OCCUtils.Construct import make_plane, make_polygon, make_box, make_wire, make_edge
 
 from base import plotocc, Face, set_trf, rot_axs, set_loc
 
@@ -45,20 +45,27 @@ class TraceSystem (plotocc):
         self.axs = gp_Ax3(gp_Pnt(0, 0, 0), gp_Dir(0, 0, 1))
         self.selected_shape = [
             make_box(gp_Pnt(-100, 10, -100), 250, 250, 250),
-            make_plane(gp_Pnt(0, 300, 0), gp_Vec(0, 1, 0)),
+            make_plane(gp_Pnt(0, 100, 0), gp_Vec(0, 1, 0),
+                       -300, 300, -300, 300),
             self.make_torus(r0=200, r1=50)
         ]
         self.shp = self.make_comp_selcted()
         self.shp.Location(set_loc(ax2=self.axs))
 
-        self.beam1 = gp_Ax3(gp_Pnt(), gp_Dir(0, 1, 0))
+        self.beam1 = gp_Ax3(gp_Pnt(), gp_Dir(0, 1, 0.25))
         self.beam1.Transform(set_trf(ax2=self.axs))
 
         self.show_axs_pln(self.beam1)
-        self.reflect_beam(self.shp, self.beam1)
+        self.reflect_beam_multi(self.shp, self.beam1)
 
         self.show_axs_pln(self.beam1)
-        self.display.DisplayShape(self.shp)
+        self.display.DisplayShape(self.shp, transparency=0.5)
+
+        p0 = gp_Pnt(0, 0, 0)
+        p1 = gp_Pnt(100, 100, 0)
+        p2 = gp_Pnt(100, 200, 0)
+        p3 = gp_Pnt(200, 200, 0)
+        #self.display.DisplayShape(make_wire (edge1, edge2))
 
     def reflect_beam_multi(self, shpe=TopoDS_Shape(), beam0=gp_Ax3(), tr=0):
         """
@@ -91,6 +98,11 @@ class TraceSystem (plotocc):
             p1 = api.Pnt()
             dst1 = p0.Distance(p1)
             print(api.Transition(), p1)
+            # IntCurveSurface_Tangent = 0
+            # IntCurveSurface_In = 1
+            # IntCurveSurface_Out = 2
+            if api.W() > 1.0E-6:
+                self.display.DisplayShape(p1)
             if dst1 < dst and api.W() > 1.0E-6:
                 dst = dst1
                 uvw = [api.U(), api.V(), api.W()]
