@@ -83,6 +83,7 @@ from OCC.Core.GeomAbs import GeomAbs_Intersection, GeomAbs_Arc
 from OCC.Core.GeomFill import GeomFill_BoundWithSurf
 from OCC.Core.GeomFill import GeomFill_BSplineCurves
 from OCC.Core.GeomFill import GeomFill_StretchStyle, GeomFill_CoonsStyle, GeomFill_CurvedStyle
+from OCC.Core.GeomProjLib import geomprojlib_Project
 from OCC.Core.AIS import AIS_Manipulator
 from OCC.Core.V3d import V3d_SpotLight, V3d_XnegYnegZpos, V3d_XposYposZpos
 from OCC.Core.Graphic3d import Graphic3d_NOM_ALUMINIUM, Graphic3d_NOM_COPPER, Graphic3d_NOM_BRASS
@@ -596,6 +597,26 @@ def trsf_scale(axs=gp_Ax3(), scale=1):
     return trf
 
 
+def get_surface_sfc(filename):
+    nx, ny = [int(s) for s in getline(filename, 3).split()]
+    xs, ys, xe, ye = [float(s) for s in getline(filename, 2).split()]
+    px = np.linspace(xs, xe, nx)
+    py = np.linspace(ys, ye, ny)
+    mesh = np.meshgrid(px, py)
+    surf = np.loadtxt(filename, skiprows=3).T
+    nx, ny = surf.shape
+    pnt_2d = TColgp_Array2OfPnt(1, nx, 1, ny)
+    for row in range(pnt_2d.LowerRow(), pnt_2d.UpperRow() + 1):
+        for col in range(pnt_2d.LowerCol(), pnt_2d.UpperCol() + 1):
+            i, j = row - 1, col - 1
+            pnt = gp_Pnt(mesh[0][i, j], mesh[1][i, j], surf[i, j])
+            pnt_2d.SetValue(row, col, pnt)
+    surface = GeomAPI_PointsToBSplineSurface(
+        pnt_2d, 3, 8, GeomAbs_G2, 0.001).Surface()
+    srf_face = BRepBuilderAPI_MakeFace(surface, 0, 1, 0, 1, 0.001).Face()
+    return srf_face
+
+
 def gen_ellipsoid(axs=gp_Ax3(), rxyz=[10, 20, 30]):
     sphere = BRepPrimAPI_MakeSphere(gp_Ax2(), 1).Solid()
     loc = set_loc(gp_Ax3(), axs)
@@ -608,6 +629,30 @@ def gen_ellipsoid(axs=gp_Ax3(), rxyz=[10, 20, 30]):
     ellips = BRepBuilderAPI_GTransform(sphere, gtrf).Shape()
     ellips.Location(loc)
     return ellips
+
+
+def get_ellips(axs, wxy, face=None):
+    wx, wy = wxy
+    if wx >= wy:
+        ax2 = axs
+        r0, r1 = wx, wy
+    else:
+        ax2 = axs.Rotated(axs.Axis(), np.deg2rad(90))
+        r0, r1 = wy, wx
+    el = Geom_Ellipse(ax2, r0, r1)
+
+    if face == None:
+        return el
+    else:
+        curv = geomprojlib_Project(el, BRep_Tool.Surface(face))
+        return curv
+
+
+def Prj_pnt_to_face(axs, pnt, face):
+    lin = gp_Lin(pnt, axs.Direction())
+    sxy = GeomAPI_IntCS(Geom_Line(lin),
+                        BRep_Tool.Surface(face)).Point(1)
+    return sxy
 
 
 def spl_face(px, py, pz, axs=gp_Ax3()):
@@ -652,7 +697,14 @@ def spl_curv_pts(pts=[gp_Pnt()]):
     api = GeomAPI_PointsToBSpline(p_array)
     return p_array, api.Curve()
 
-
+def surf_curv(lxy=[100, 100], nxy=[100, 100], rxy=[1000, 1000]):
+    px = np.linspace(-1, 1, nxy[0]) * lxy[0] / 2
+    py = np.linspace(-1, 1, nxy[1]) * lxy[1] / 2
+    mesh = np.meshgrid(px, py)
+    curv_x = curvature(mesh[0], rxy[0], 0)
+    curv_y = curvature(mesh[1], rxy[1], 0)
+    surf = curv_x + curv_y
+    return spl_curv(*mesh, surf)
 def surf_spl_pcd(px, py, pz):
     nx, ny = px.shape
     pnt_2d = TColgp_Array2OfPnt(1, nx, 1, ny)
@@ -687,7 +739,20 @@ def float_to_string(number):
     else:
         return ' {: 0.10E}'.format(number).replace('E', '')
 
-
+def normal(geom, d0=0, d1=0):
+    p, v0, v1 = gp_Pnt(), gp_Vec(), gp_Vec()
+    geom.D1(d0, d1, p, v0, v1)
+    v0.Normalize()
+    v1.Normalize()
+    # v0.Reverse()
+    # v1.Reverse()
+    v2 = v1.Crossed(v0)
+    v2.Normalize()
+    print("pnt", p.X(), p.Y(), p.Z())
+    print("v_x", v0.X(), v0.Y(), v0.Z())
+    print("v_y", v1.X(), v1.Y(), v1.Z())
+    print("v_z", v2.X(), v2.Y(), v2.Z())
+    return p, v0, v1, v2
 def get_deg(axs, vec):
     vx = dir_to_vec(axs.XDirection())
     vy = dir_to_vec(axs.YDirection())
@@ -1623,6 +1688,20 @@ class plotocc (OCCApp):
         return make_wire(make_edge(Geom_Circle(axs.Ax2(), radi)))
 
     def make_torus(self, axs=gp_Ax3(), r0=6000, r1=1500):
+        """
+        A3 is the local coordinate system of the surface. 
+        the orientation of increasing v parametric value is defined by the rotation around the main axis (zaxis) in the trigonometric sense. 
+        the parametrization of the surface in the u direction is defined such as the normal vector (n = d1u ^ d1v) is oriented towards the 'outside region' of the surface. 
+        warnings : it is not forbidden to create a toroidal surface with majorradius = minorradius = 0.0 //! raised if minorradius < 0.0 or if majorradius < 0.0.
+
+        Args:
+            axs (gp_Ax3): Defaults to gp_Ax3().
+            r0 (int): Defaults to 6000.
+            r1 (int): Defaults to 1500.
+
+        Returns:
+            TopoDS_Face: Torus Surface
+        """
         tok_surf = Geom_ToroidalSurface(axs, r0, r1)
         return make_face(tok_surf, 1.0E-9)
 
@@ -1645,6 +1724,19 @@ class plotocc (OCCApp):
         return face
 
     def make_trimmedcylinder(self, axs=gp_Ax1(), radii=700, hight=500, rng=[0, 0.1], xyz="y"):
+        """
+        make TopDS_Face with a portion of gp_Cylinder trimmed.
+
+        Args:
+            axs (gp_Ax3): Defaults to gp_Ax3().
+            radii (float): Defaults to 700.
+            hight (float): Trim range (V parameters of cylinder). Defaults to 500.
+            rng (list[float, float]): Trim range (U parameters of cylinder). Defaults to [0, 0.1].
+            xyz (str): Defaults to "y".
+
+        Returns:
+            TopoDS_Face: Trimmed Surface
+        """
         loc = self.prop_axs(axs, radii, "z")
         if xyz == "y":
             rotate_xyz(loc, deg=90, xyz="y")
@@ -1851,6 +1943,18 @@ class plotocc (OCCApp):
                 self.display.DisplayShape(p1)
 
     def proj_pln_showup(self, face, nxy=[10, 10], lx=[-10, 10], ly=[-10, 10], axs=gp_Ax3()):
+        """
+        Projection from grid[mesh] to a Face[data], 
+        where the range defined lx,ly on a plane[axs] is digited with the number of nxy points.
+
+        Parameters
+        ----------
+        face : TopoDS_Face
+        nxy : List[int, int]
+        lx : List[float, float]
+        ly : List[float, float]
+        axs: gp_Ax3
+        """
         trf = set_trf(gp_Ax3(), axs)
         nx, ny = nxy
         xs, xe = lx
@@ -1870,10 +1974,25 @@ class plotocc (OCCApp):
         return mesh, data
 
     def reflect_beam(self, shpe=TopoDS_Shape(), beam0=gp_Ax3(), tr=0):
+        """
+        Calculate the reflection/transmission of a beam by shape
+
+        Args:
+            shpe (TopoDS_Shape): The reflection shape. Defaults to TopoDS_Shape().
+            beam0 (gp_Ax3): Defaults to gp_Ax3().
+            tr (int): 
+                0 : reflection (Default)
+                1 : transmission
+                2 : normal on face.
+
+        Returns:
+            beam1 [gp_Ax3]: 
+        """
         v0 = dir_to_vec(beam0.Direction())
         v1 = dir_to_vec(beam0.XDirection())
         p0 = beam0.Location()
-        lin = gp_Lin(beam0.Axis())
+        d0 = beam0.Direction()
+        lin = gp_Lin(p0, d0)
         api = BRepIntCurveSurface_Inter()
         api.Init(shpe, lin, 1.0E-9)
         dst = np.inf
@@ -1884,6 +2003,7 @@ class plotocc (OCCApp):
         while api.More():
             p1 = api.Pnt()
             dst1 = p0.Distance(p1)
+            print(api.Transition(), p1)
             if dst1 < dst and api.W() > 1.0E-6:
                 dst = dst1
                 uvw = [api.U(), api.V(), api.W()]
@@ -1915,14 +2035,16 @@ class plotocc (OCCApp):
             vec_to_dir(vx)
         )
         if tr == 0:
-            # Reflect
+            # Reflection
             beam1.Mirror(norm1.Ax2())
             if beam1.Direction().Dot(norm1.Direction()) < 0:
                 beam1.ZReverse()
         elif tr == 1:
-            # Transporse
+            # Transmission
             beam1.ZReverse()
             beam1.XReverse()
+        elif tr == 2:
+            beam1 = gp_Ax3(norm1.Ax2())
         return beam1
 
     def calc_angle(self, ax0=gp_Ax3(), ax1=gp_Ax3()):

@@ -25,7 +25,6 @@ from OCCUtils.Construct import point_to_vector, vector_to_point
 from OCCUtils.Construct import make_plane, make_polygon, make_box
 
 from base import plotocc, Face, set_trf, rot_axs, set_loc
-from Surface import surf_curv
 
 
 def move_pnt_to_dir(axs=gp_Ax3(), scale=100):
