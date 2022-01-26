@@ -60,7 +60,7 @@ class TraceSystem (plotocc):
         self.show_axs_pln(self.beam1)
         self.display.DisplayShape(self.shp)
 
-    def reflect_beam(self, shpe=TopoDS_Shape(), beam0=gp_Ax3(), tr=0):
+    def reflect_beam_multi(self, shpe=TopoDS_Shape(), beam0=gp_Ax3(), tr=0):
         """
         Calculate the reflection/transmission of a beam by shape
 
