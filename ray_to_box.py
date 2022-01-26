@@ -1,6 +1,3 @@
-from OCC.Core.BRepAdaptor import BRepAdaptor_Surface
-from OCC.Core.BRepIntCurveSurface import BRepIntCurveSurface_Inter
-from OCC.Core.BRepLProp import BRepLProp_SLProps
 import numpy as np
 import matplotlib.pyplot as plt
 import sys
@@ -17,6 +14,9 @@ from OCC.Core.BRepCheck import BRepCheck_Shell
 from OCC.Core.BRepBuilderAPI import BRepBuilderAPI_Collect, BRepBuilderAPI_LineThroughIdenticPoints
 from OCC.Core.BRepAlgoAPI import BRepAlgoAPI_Common
 from OCC.Core.BRepPrimAPI import BRepPrimAPI_MakeBox
+from OCC.Core.BRepAdaptor import BRepAdaptor_Surface
+from OCC.Core.BRepIntCurveSurface import BRepIntCurveSurface_Inter
+from OCC.Core.BRepLProp import BRepLProp_SLProps
 from OCC.Core.Geom import Geom_Line
 from OCC.Core.GeomAPI import GeomAPI_IntCS
 from OCC.Core.GeomLProp import GeomLProp_SurfaceTool
@@ -45,18 +45,18 @@ class TraceSystem (plotocc):
         self.axs = gp_Ax3(gp_Pnt(0, 0, 0), gp_Dir(0, 0, 1))
         self.selected_shape = [
             make_box(gp_Pnt(-100, 10, -100), 250, 250, 250),
-            make_plane(gp_Pnt(0, 300, 0), gp_Vec(0,1,0)),
+            make_plane(gp_Pnt(0, 300, 0), gp_Vec(0, 1, 0)),
             self.make_torus(r0=200, r1=50)
         ]
         self.shp = self.make_comp_selcted()
         self.shp.Location(set_loc(ax2=self.axs))
-        
-        self.beam1 = gp_Ax3(gp_Pnt(), gp_Dir(0,1,0))
+
+        self.beam1 = gp_Ax3(gp_Pnt(), gp_Dir(0, 1, 0))
         self.beam1.Transform(set_trf(ax2=self.axs))
 
         self.show_axs_pln(self.beam1)
         self.reflect_beam(self.shp, self.beam1)
-        
+
         self.show_axs_pln(self.beam1)
         self.display.DisplayShape(self.shp)
 

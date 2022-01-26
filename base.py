@@ -697,6 +697,7 @@ def spl_curv_pts(pts=[gp_Pnt()]):
     api = GeomAPI_PointsToBSpline(p_array)
     return p_array, api.Curve()
 
+
 def surf_curv(lxy=[100, 100], nxy=[100, 100], rxy=[1000, 1000]):
     px = np.linspace(-1, 1, nxy[0]) * lxy[0] / 2
     py = np.linspace(-1, 1, nxy[1]) * lxy[1] / 2
@@ -705,6 +706,8 @@ def surf_curv(lxy=[100, 100], nxy=[100, 100], rxy=[1000, 1000]):
     curv_y = curvature(mesh[1], rxy[1], 0)
     surf = curv_x + curv_y
     return spl_curv(*mesh, surf)
+
+
 def surf_spl_pcd(px, py, pz):
     nx, ny = px.shape
     pnt_2d = TColgp_Array2OfPnt(1, nx, 1, ny)
@@ -739,6 +742,7 @@ def float_to_string(number):
     else:
         return ' {: 0.10E}'.format(number).replace('E', '')
 
+
 def normal(geom, d0=0, d1=0):
     p, v0, v1 = gp_Pnt(), gp_Vec(), gp_Vec()
     geom.D1(d0, d1, p, v0, v1)
@@ -753,6 +757,8 @@ def normal(geom, d0=0, d1=0):
     print("v_y", v1.X(), v1.Y(), v1.Z())
     print("v_z", v2.X(), v2.Y(), v2.Z())
     return p, v0, v1, v2
+
+
 def get_deg(axs, vec):
     vx = dir_to_vec(axs.XDirection())
     vy = dir_to_vec(axs.YDirection())
