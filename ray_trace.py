@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import sys
 import os
 import scipy.constants as cnt
-from optparse import OptionParser
+import argparse
 
 from OCC.Core.gp import gp_Pnt, gp_Vec, gp_Dir
 from OCC.Core.gp import gp_Ax1, gp_Ax2, gp_Ax3
@@ -120,9 +120,9 @@ class TraceSystem (plotocc):
 
 if __name__ == "__main__":
     argvs = sys.argv
-    parser = OptionParser()
-    parser.add_option("--dir", dest="dir", default="./")
-    opt, argc = parser.parse_args(argvs)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dir", dest="dir", default="./")
+    opt = parser.parse_args()
     print(argc, opt)
 
     obj = TraceSystem()
