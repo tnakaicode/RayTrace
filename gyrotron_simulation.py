@@ -591,7 +591,7 @@ def plot_results(
     plt.show()
 
 
-def main():
+if __name__ == "__main__":
     """メイン実行関数"""
     print("=" * 60)
     print("ジャイロトロン共振器シミュレーション")
@@ -599,19 +599,19 @@ def main():
 
     # パラメータ設定
     # 共振器 (140 GHz帯を想定)
-    cavity_radius = 0.01  # 1 cm
-    cavity_length = 0.05  # 5 cm
-    mode_m = 3  # TE_{31} モードなど
-    mode_n = 1
+    cavity_radius = 0.02  # 2 cm
+    cavity_length = 0.10  # 10 cm
+    mode_m = 10  # TE_{31} モードなど
+    mode_n = 11
 
     cavity = CylindricalCavity(cavity_radius, cavity_length, mode_m, mode_n)
 
     # 電子ビーム
-    n_electrons = 10  # 計算コスト削減のため少数
+    n_electrons = 20  # 計算コスト削減のため少数
     B0 = 5.0  # 5 Tesla
     V_beam = 80e3  # 80 kV
-    pitch_angle = np.radians(60)  # 60度
-    beam_radius = 0.005  # 5 mm
+    pitch_angle = np.radians(1.2)  # 60度
+    beam_radius = 0.010  # 5 mm
 
     beam = GyrotronElectronBeam(n_electrons, B0, V_beam, pitch_angle, beam_radius)
 
@@ -621,15 +621,11 @@ def main():
     # シミュレーション実行
     # サイクロトロン周期
     T_c = 2 * np.pi / beam.omega_c
-    n_cycles = 5
+    n_cycles = 10
     t_max = n_cycles * T_c
-    dt = T_c / 100  # 1周期を100点でサンプル
+    dt = T_c / 1000  # 1周期を100点でサンプル
 
     times, trajectories = simulator.simulate(t_max, dt, E_initial=5e3)
 
     # 結果プロット
     plot_results(simulator, times, trajectories)
-
-
-if __name__ == "__main__":
-    main()
