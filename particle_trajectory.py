@@ -23,11 +23,16 @@ class PhysicalConstants:
     e = 1.602e-19  # 電気素量 [C]
     m_e = 9.109e-31  # 電子質量 [kg]
     m_p = 1.673e-27  # 陽子質量 [kg]
+    epsilon_0 = 8.854e-12  # 真空の誘電率 [F/m]
+    mu_0 = 1.257e-6  # 真空の透磁率 [H/m]
 
     # 電子の比電荷 [C/kg]
     q_over_m_electron = e / m_e  # ≈ 1.759e11 C/kg
     # 陽子の比電荷 [C/kg]
     q_over_m_proton = e / m_p  # ≈ 9.578e7 C/kg
+
+    # 古典電子半径 r_0 = e^2/(4πε_0 m_e c^2)
+    r_e = e**2 / (4 * np.pi * epsilon_0 * m_e * c**2)  # ≈ 2.818e-15 m
 
     @staticmethod
     def cyclotron_frequency(B: float, q_over_m: float) -> float:
@@ -39,6 +44,55 @@ class PhysicalConstants:
         """ラーモア半径 r_L = v⊥/(ω_c) = m*v⊥/(qB) [m]"""
         omega_c = PhysicalConstants.cyclotron_frequency(B, q_over_m)
         return v_perp / omega_c if omega_c != 0 else np.inf
+
+    @staticmethod
+    def lorentz_factor(v: float) -> float:
+        """ローレンツ因子 γ = 1/sqrt(1 - v^2/c^2)"""
+        beta = v / PhysicalConstants.c
+        if beta >= 1.0:
+            return np.inf
+        return 1.0 / np.sqrt(1.0 - beta**2)
+
+    @staticmethod
+    def synchrotron_power(
+        gamma: float, v: np.ndarray, B: np.ndarray, q: float, m: float
+    ) -> float:
+        """
+        シンクロトロン放射パワー [W]
+        P = (2/3) * r_e * c * gamma^4 * (v × B)^2 / c^2
+        または P = (q^4 B^2 gamma^2 v_perp^2) / (6πε_0 m^2 c^3)
+        """
+        v_cross_B = np.cross(v, B)
+        v_perp_sq = np.sum(v_cross_B**2) / np.sum(B**2) if np.sum(B**2) > 0 else 0
+
+        # 簡略化された式：電子の場合
+        if abs(m - PhysicalConstants.m_e) / PhysicalConstants.m_e < 0.01:
+            c = PhysicalConstants.c
+            r_e = PhysicalConstants.r_e
+            return (2.0 / 3.0) * r_e * c * gamma**4 * np.sum(v_cross_B**2) / c**2
+        else:
+            # 一般的な式
+            c = PhysicalConstants.c
+            eps0 = PhysicalConstants.epsilon_0
+            B_mag = np.linalg.norm(B)
+            return (q**4 * B_mag**2 * gamma**2 * v_perp_sq) / (
+                6 * np.pi * eps0 * m**2 * c**3
+            )
+
+    @staticmethod
+    def radiation_damping_force(
+        gamma: float, v: np.ndarray, B: np.ndarray, q: float, m: float
+    ) -> np.ndarray:
+        """
+        放射減衰力 (Abraham-Lorentz-Dirac力の簡略形)
+        F_rad = -P/v * (v/|v|)  速度と逆方向
+        """
+        v_mag = np.linalg.norm(v)
+        if v_mag < 1e-10:
+            return np.zeros(3)
+
+        P = PhysicalConstants.synchrotron_power(gamma, v, B, q, m)
+        return -P / v_mag * (v / v_mag)
 
 
 class MagneticField:
@@ -103,20 +157,30 @@ class ParticleIntegrator:
         magnetic_field: MagneticField,
         q_over_m: float = 1.0,
         particle_name: str = "particle",
+        include_radiation: bool = False,
+        charge: float = None,
+        mass: float = None,
     ):
         """
         Parameters:
             magnetic_field: 磁場オブジェクト
             q_over_m: 比電荷 q/m [C/kg]
             particle_name: 粒子名 (表示用)
+            include_radiation: シンクロトロン放射を含むか
+            charge: 電荷 [C]
+            mass: 質量 [kg]
         """
         self.B_field = magnetic_field
         self.q_over_m = q_over_m
         self.particle_name = particle_name
+        self.include_radiation = include_radiation
+        self.charge = charge if charge is not None else PhysicalConstants.e
+        self.mass = mass if mass is not None else PhysicalConstants.m_e
+        self.total_radiated_energy = 0.0
 
     def equation_of_motion(self, state: np.ndarray, t: float) -> np.ndarray:
         """
-        運動方程式: dx/dt = v, dv/dt = (q/m) * v × B
+        運動方程式: dx/dt = v, dv/dt = (q/m) * v × B + F_rad/m
 
         Parameters:
             state: [x, y, z, vx, vy, vz] 状態ベクトル
@@ -129,7 +193,17 @@ class ParticleIntegrator:
         v = state[3:6]
 
         B = self.B_field.get_field(x)
+        # ローレンツ力
         acceleration = self.q_over_m * np.cross(v, B)
+
+        # 放射減衰力を追加
+        if self.include_radiation:
+            v_mag = np.linalg.norm(v)
+            gamma = PhysicalConstants.lorentz_factor(v_mag)
+            F_rad = PhysicalConstants.radiation_damping_force(
+                gamma, v, B, self.charge, self.mass
+            )
+            acceleration += F_rad / self.mass
 
         dstate_dt = np.zeros(6)
         dstate_dt[0:3] = v
@@ -158,7 +232,7 @@ class ParticleIntegrator:
 
     def integrate(
         self, initial_state: np.ndarray, t_max: float, dt: float = 0.01
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         """
         軌道を積分
 
@@ -168,18 +242,33 @@ class ParticleIntegrator:
             dt: 時間刻み
 
         Returns:
-            (times, states): 時刻配列と状態配列
+            (times, states, radiated_power): 時刻配列、状態配列、放射パワー配列
         """
         n_steps = int(t_max / dt) + 1
         times = np.linspace(0, t_max, n_steps)
         states = np.zeros((n_steps, 6))
+        radiated_power = np.zeros(n_steps)
 
         states[0] = initial_state
+        self.total_radiated_energy = 0.0
 
         for i in range(1, n_steps):
             states[i] = self.rk4_step(states[i - 1], times[i - 1], dt)
 
-        return times, states
+            # 放射パワーを記録
+            if self.include_radiation:
+                v = states[i, 3:6]
+                x = states[i, 0:3]
+                B = self.B_field.get_field(x)
+                v_mag = np.linalg.norm(v)
+                gamma = PhysicalConstants.lorentz_factor(v_mag)
+                P = PhysicalConstants.synchrotron_power(
+                    gamma, v, B, self.charge, self.mass
+                )
+                radiated_power[i] = P
+                self.total_radiated_energy += P * dt
+
+        return times, states, radiated_power
 
 
 class ParticleTrajectorySimulation:
@@ -190,18 +279,30 @@ class ParticleTrajectorySimulation:
         field_type: str = "ABC",
         q_over_m: float = 1.0,
         particle_name: str = "particle",
+        include_radiation: bool = False,
+        charge: float = None,
+        mass: float = None,
     ):
         """
         Parameters:
             field_type: 磁場タイプ
             q_over_m: 比電荷 [C/kg]
             particle_name: 粒子名
+            include_radiation: シンクロトロン放射を含むか
+            charge: 電荷 [C]
+            mass: 質量 [kg]
         """
         self.magnetic_field = MagneticField(field_type=field_type, k=1.0, magnitude=1.0)
         self.integrator = ParticleIntegrator(
-            self.magnetic_field, q_over_m, particle_name
+            self.magnetic_field,
+            q_over_m,
+            particle_name,
+            include_radiation,
+            charge,
+            mass,
         )
         self.particle_name = particle_name
+        self.include_radiation = include_radiation
 
     def set_initial_condition(self, x0: np.ndarray, v0: np.ndarray) -> np.ndarray:
         """
@@ -243,19 +344,28 @@ class ParticleTrajectorySimulation:
         print(f"  Cyclotron freq: {omega_c:.3e} rad/s ({omega_c/(2*np.pi):.3e} Hz)")
         print(f"  Time: 0 -> {t_max}, dt = {dt}")
 
-        times, states = self.integrator.integrate(initial_state, t_max, dt)
+        times, states, radiated_power = self.integrator.integrate(
+            initial_state, t_max, dt
+        )
 
         # エネルギー保存確認
-        energy_initial = 0.5 * np.sum(initial_state[3:6] ** 2)
-        energy_final = 0.5 * np.sum(states[-1, 3:6] ** 2)
+        energy_initial = 0.5 * self.integrator.mass * np.sum(initial_state[3:6] ** 2)
+        energy_final = 0.5 * self.integrator.mass * np.sum(states[-1, 3:6] ** 2)
         energy_error = abs(energy_final - energy_initial) / energy_initial
 
         print(f"Simulation completed.")
-        print(f"  Initial energy: {energy_initial:.6f}")
-        print(f"  Final energy: {energy_final:.6f}")
+        print(f"  Initial energy: {energy_initial:.3e} J")
+        print(f"  Final energy: {energy_final:.3e} J")
         print(f"  Energy error: {energy_error*100:.4f}%")
 
-        return times, states
+        if self.include_radiation:
+            print(f"  Total radiated: {self.integrator.total_radiated_energy:.3e} J")
+            print(
+                f"  Radiation fraction: {self.integrator.total_radiated_energy/energy_initial*100:.4f}%"
+            )
+            print(f"  Peak power: {np.max(radiated_power):.3e} W")
+
+        return times, states, radiated_power
 
     def plot_trajectory(self, states: np.ndarray, save_path: str = None):
         """
@@ -418,7 +528,7 @@ def example_electron():
     t_max = n_cycles * T_c
     dt = T_c / 50  # 1周期を50点
 
-    times, states = sim.run(initial_state, t_max=t_max, dt=dt)
+    times, states, radiated_power = sim.run(initial_state, t_max=t_max, dt=dt)
 
     # 結果プロット
     sim.plot_trajectory(states)
@@ -454,7 +564,7 @@ def example_single_particle():
     t_max = n_cycles * T_c
     dt = T_c / 50
 
-    times, states = sim.run(initial_state, t_max=t_max, dt=dt)
+    times, states, radiated_power = sim.run(initial_state, t_max=t_max, dt=dt)
 
     # 結果プロット
     sim.plot_trajectory(states)
@@ -496,7 +606,7 @@ def example_multiple_initial_conditions():
         v0 = np.array([3e6, 0.0, 0.0])  # 3000 km/s
         initial_state = sim.set_initial_condition(x0, v0)
 
-        times, states = sim.run(initial_state, t_max=t_max, dt=dt)
+        times, states, radiated_power = sim.run(initial_state, t_max=t_max, dt=dt)
 
         ax.plot(
             states[:, 0],
@@ -552,7 +662,7 @@ def example_different_fields():
         sim.magnetic_field.magnitude = B0
         initial_state = sim.set_initial_condition(x0, v0)
 
-        times, states = sim.run(initial_state, t_max=t_max, dt=dt)
+        times, states, radiated_power = sim.run(initial_state, t_max=t_max, dt=dt)
 
         ax = fig.add_subplot(1, 2, i + 1, projection="3d")
         ax.plot(
@@ -589,6 +699,75 @@ def example_different_fields():
     plt.show()
 
 
+def example_with_radiation():
+    """相対論的電子のシンクロトロン放射を含む計算例"""
+    print("=" * 60)
+    print("高エネルギー電子 - シンクロトロン放射込み")
+    print("=" * 60)
+
+    # 高エネルギー電子
+    q_over_m = PhysicalConstants.q_over_m_electron
+    B0 = 10.0  # 10 Tesla (強磁場)
+
+    sim = ParticleTrajectorySimulation(
+        field_type="ABC",
+        q_over_m=q_over_m,
+        particle_name="relativistic electron",
+        include_radiation=True,  # 放射を含む！
+        charge=PhysicalConstants.e,
+        mass=PhysicalConstants.m_e,
+    )
+    sim.magnetic_field.magnitude = B0
+
+    # 高速電子 (光速の10%)
+    c = PhysicalConstants.c
+    v_mag = 0.1 * c  # 3e7 m/s
+    x0 = np.array([0.001, 0.0, 0.0])
+    v0 = np.array([v_mag, 0.0, 0.0])
+
+    gamma = PhysicalConstants.lorentz_factor(v_mag)
+    omega_c = PhysicalConstants.cyclotron_frequency(B0, q_over_m)
+    T_c = 2 * np.pi / omega_c
+
+    print(f"\n高エネルギー電子:")
+    print(f"  速度: {v_mag:.3e} m/s ({v_mag/c:.2f}c)")
+    print(f"  ローレンツ因子: γ = {gamma:.4f}")
+    print(f"  磁場: {B0} T")
+    print(f"  サイクロトロン周期: {T_c*1e12:.3f} ps\n")
+
+    initial_state = sim.set_initial_condition(x0, v0)
+
+    n_cycles = 20
+    t_max = n_cycles * T_c
+    dt = T_c / 50
+
+    times, states, radiated_power = sim.run(initial_state, t_max=t_max, dt=dt)
+
+    # 放射パワーのプロット
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8))
+
+    # 運動エネルギー
+    kinetic_energy = 0.5 * PhysicalConstants.m_e * np.sum(states[:, 3:6] ** 2, axis=1)
+    ax1.plot(times * 1e12, kinetic_energy, "b-", linewidth=1.5)
+    ax1.set_xlabel("Time (ps)")
+    ax1.set_ylabel("Kinetic Energy (J)")
+    ax1.set_title("Energy Loss due to Synchrotron Radiation")
+    ax1.grid(True)
+
+    # 放射パワー
+    ax2.plot(times * 1e12, radiated_power, "r-", linewidth=1.5)
+    ax2.set_xlabel("Time (ps)")
+    ax2.set_ylabel("Radiated Power (W)")
+    ax2.set_title("Instantaneous Radiated Power")
+    ax2.grid(True)
+
+    plt.tight_layout()
+    plt.show()
+
+    # 軌道プロット
+    sim.plot_trajectory(states)
+
+
 if __name__ == "__main__":
     # 実行例を選択
     print("\n磁場中の電子軌道シミュレーション")
@@ -599,9 +778,11 @@ if __name__ == "__main__":
     print("  2: 長時間追跡 (0.1T, 50サイクル)")
     print("  3: 8電子同時追跡 (0.1T, 30サイクル)")
     print("  4: 異なる磁場比較 (0.05T, 40サイクル)")
+    print("  5: シンクロトロン放射 (10T, 0.1c, 放射減衰込み)")
     print("\n" + "=" * 60)
 
     example_electron()
     example_single_particle()
-    example_multiple_initial_conditions()
-    example_different_fields()
+    # example_multiple_initial_conditions()
+    # example_different_fields()
+    example_with_radiation()
