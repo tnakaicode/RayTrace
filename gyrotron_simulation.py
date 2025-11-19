@@ -22,6 +22,10 @@ from matplotlib import cm
 from typing import Tuple, List
 from scipy.special import jn, jn_zeros
 
+# 日本語フォント設定
+plt.rcParams["font.sans-serif"] = ["MS Gothic", "Yu Gothic", "Meiryo", "DejaVu Sans"]
+plt.rcParams["axes.unicode_minus"] = False
+
 
 class PhysicalConstants:
     """物理定数クラス"""
@@ -456,139 +460,256 @@ class GyrotronSimulator:
 
         return X, Y, E_magnitude
 
+    def calculate_acceleration_potential(self, z_range: np.ndarray) -> np.ndarray:
+        """
+        加速電位の軸方向分布を計算
 
-def plot_results(
-    simulator: GyrotronSimulator, times: np.ndarray, trajectories: List[np.ndarray]
-):
-    """結果の可視化"""
+        典型的なジャイロトロン電子銃:
+        - カソード (z < -L_gun): V = 0
+        - 加速領域 (-L_gun < z < 0): V(z) = V_beam * f(z)  smooth transition
+        - 共振器内 (z > 0): V = V_beam (一定)
 
-    # 図1: 3D電子軌道
-    fig = plt.figure(figsize=(18, 6))
+        Parameters:
+            z_range: z座標配列 [m]
 
-    # 3D軌道プロット
-    ax1 = fig.add_subplot(131, projection="3d")
+        Returns:
+            potential: 電位配列 [V]
+        """
+        L_gun = 0.05  # 電子銃長さ 5cm
+        V_beam = self.beam.V_beam
 
-    # 数本の電子軌道を描画
-    n_plot = min(5, len(trajectories))
-    colors = plt.cm.rainbow(np.linspace(0, 1, n_plot))
+        potential = np.zeros_like(z_range)
 
-    for i in range(n_plot):
-        traj = trajectories[i]
-        ax1.plot(
-            traj[:, 0] * 1e3,
-            traj[:, 1] * 1e3,
-            traj[:, 2] * 1e2,
-            color=colors[i],
+        for i, z in enumerate(z_range):
+            if z < -L_gun:
+                # カソード領域: 接地電位
+                potential[i] = 0.0
+            elif z < 0:
+                # 加速領域: スムーズな遷移 (3次関数)
+                xi = (z + L_gun) / L_gun  # 0→1に正規化
+                potential[i] = V_beam * (3 * xi**2 - 2 * xi**3)  # smooth step function
+            else:
+                # ドリフト領域・共振器内: 一定電位
+                potential[i] = V_beam
+
+        return potential
+
+    def plot_acceleration_voltage(self):
+        """加速電圧分布の可視化"""
+
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+
+        # 軸方向電位分布
+        z_range = np.linspace(-0.08, 0.12, 1000)  # -8cm → +12cm
+        V_profile = self.calculate_acceleration_potential(z_range)
+        E_axial = -np.gradient(V_profile, z_range)  # 電場 E = -dV/dz
+
+        ax1.plot(z_range * 1e2, V_profile * 1e-3, "b-", linewidth=2, label="電位 V(z)")
+        ax1.axhline(
+            y=self.beam.V_beam * 1e-3,
+            color="r",
+            linestyle="--",
             linewidth=1,
-            alpha=0.7,
-            label=f"Electron {i+1}",
+            alpha=0.5,
+            label=f"最終電圧 {self.beam.V_beam*1e-3:.0f} kV",
         )
+        ax1.axvline(x=-5, color="gray", linestyle=":", linewidth=1, alpha=0.5)
+        ax1.axvline(x=0, color="gray", linestyle=":", linewidth=1, alpha=0.5)
+        ax1.text(
+            -2.5,
+            self.beam.V_beam * 1e-3 * 0.5,
+            "加速領域",
+            ha="center",
+            fontsize=10,
+            bbox=dict(boxstyle="round", facecolor="wheat", alpha=0.5),
+        )
+        ax1.text(
+            3,
+            self.beam.V_beam * 1e-3 * 0.9,
+            "共振器",
+            ha="center",
+            fontsize=10,
+            bbox=dict(boxstyle="round", facecolor="lightblue", alpha=0.5),
+        )
+        ax1.set_xlabel("軸方向位置 z (cm)")
+        ax1.set_ylabel("加速電位 (kV)")
+        ax1.set_title("ジャイロトロン電子銃の電位分布")
+        ax1.grid(True, alpha=0.3)
+        ax1.legend()
 
-    # 共振器の円筒を描画
-    theta = np.linspace(0, 2 * np.pi, 50)
-    z_cyl = np.linspace(0, simulator.cavity.length * 1e2, 2)
-    Theta, Z = np.meshgrid(theta, z_cyl)
-    X_cyl = simulator.cavity.radius * 1e3 * np.cos(Theta)
-    Y_cyl = simulator.cavity.radius * 1e3 * np.sin(Theta)
-    ax1.plot_surface(X_cyl, Y_cyl, Z, alpha=0.1, color="gray")
-
-    ax1.set_xlabel("X (mm)")
-    ax1.set_ylabel("Y (mm)")
-    ax1.set_zlabel("Z (cm)")
-    ax1.set_title("Electron Trajectories in Gyrotron Cavity")
-    ax1.legend(fontsize=8)
-
-    # XY平面投影
-    ax2 = fig.add_subplot(132)
-    for i in range(n_plot):
-        traj = trajectories[i]
+        # 軸方向電場分布
         ax2.plot(
-            traj[:, 0] * 1e3, traj[:, 1] * 1e3, color=colors[i], linewidth=1, alpha=0.7
+            z_range * 1e2, E_axial * 1e-3, "r-", linewidth=2, label="電場 E_z = -dV/dz"
         )
-
-    circle = plt.Circle(
-        (0, 0),
-        simulator.cavity.radius * 1e3,
-        fill=False,
-        color="gray",
-        linestyle="--",
-        linewidth=2,
-    )
-    ax2.add_patch(circle)
-    ax2.set_xlabel("X (mm)")
-    ax2.set_ylabel("Y (mm)")
-    ax2.set_title("XY Projection")
-    ax2.axis("equal")
-    ax2.grid(True)
-
-    # RF電場分布 (contourf)
-    ax3 = fig.add_subplot(133)
-    z_plane = simulator.cavity.length / 2  # 中央断面
-    X, Y, E_mag = simulator.calculate_field_distribution(z_plane, n_grid=100)
-
-    contour = ax3.contourf(X * 1e3, Y * 1e3, E_mag, levels=20, cmap="hot")
-    ax3.contour(
-        X * 1e3, Y * 1e3, E_mag, levels=10, colors="black", linewidths=0.5, alpha=0.3
-    )
-    cbar = plt.colorbar(contour, ax=ax3)
-    cbar.set_label("Electric Field (V/m)", rotation=270, labelpad=20)
-
-    circle = plt.Circle(
-        (0, 0),
-        simulator.cavity.radius * 1e3,
-        fill=False,
-        color="white",
-        linestyle="--",
-        linewidth=2,
-    )
-    ax3.add_patch(circle)
-
-    ax3.set_xlabel("X (mm)")
-    ax3.set_ylabel("Y (mm)")
-    ax3.set_title(
-        f"RF E-field Distribution (TE$_{{{simulator.cavity.mode_m}{simulator.cavity.mode_n}}}$ mode)"
-    )
-    ax3.axis("equal")
-
-    plt.tight_layout()
-    plt.show()
-
-    # 図2: エネルギー時間発展
-    fig2, (ax4, ax5) = plt.subplots(2, 1, figsize=(10, 8))
-
-    # 平均運動エネルギー（相対論的）
-    n_electrons = len(trajectories)
-    avg_energy = np.zeros(len(times))
-
-    for i in range(n_electrons):
-        traj = trajectories[i]
-        v = np.sqrt(traj[:, 3] ** 2 + traj[:, 4] ** 2 + traj[:, 5] ** 2)
-
-        # 相対論的運動エネルギー: E_kin = (γ - 1)m_e c²
-        gamma_traj = np.array(
-            [PhysicalConstants.lorentz_factor(v_i) if v_i > 0 else 1.0 for v_i in v]
+        ax2.axvline(x=-5, color="gray", linestyle=":", linewidth=1, alpha=0.5)
+        ax2.axvline(x=0, color="gray", linestyle=":", linewidth=1, alpha=0.5)
+        ax2.fill_between(
+            z_range * 1e2,
+            0,
+            E_axial * 1e-3,
+            where=(z_range >= -0.05) & (z_range <= 0),
+            alpha=0.3,
+            color="orange",
+            label="加速領域",
         )
-        kinetic_energy = (
-            (gamma_traj - 1.0) * PhysicalConstants.m_e * PhysicalConstants.c**2
+        ax2.set_xlabel("軸方向位置 z (cm)")
+        ax2.set_ylabel("軸方向電場 E_z (kV/cm)")
+        ax2.set_title("加速電場分布")
+        ax2.grid(True, alpha=0.3)
+        ax2.legend()
+
+        plt.tight_layout()
+        plt.show()
+
+        # 加速プロセスの情報を出力
+        print("\n加速電圧パラメータ:")
+        print(f"  カソード電位: 0 V (接地)")
+        print(f"  アノード電位: {self.beam.V_beam*1e-3:.1f} kV")
+        print(f"  加速領域長さ: 5 cm")
+        print(f"  平均加速電場: {self.beam.V_beam/0.05*1e-3:.1f} kV/cm")
+        print(f"  最終電子エネルギー: {self.beam.V_beam*PhysicalConstants.e:.3e} J")
+        print(f"  = {self.beam.V_beam*1e-3:.1f} keV")
+
+    def plot_results(self, times: np.ndarray, trajectories: List[np.ndarray]):
+        """結果の可視化"""
+
+        # 図1: 3D電子軌道
+        fig = plt.figure(figsize=(18, 6))
+
+        # 3D軌道プロット
+        ax1 = fig.add_subplot(131, projection="3d")
+
+        # 数本の電子軌道を描画
+        n_plot = min(5, len(trajectories))
+        colors = plt.cm.rainbow(np.linspace(0, 1, n_plot))
+
+        for i in range(n_plot):
+            traj = trajectories[i]
+            ax1.plot(
+                traj[:, 0] * 1e3,
+                traj[:, 1] * 1e3,
+                traj[:, 2] * 1e2,
+                color=colors[i],
+                linewidth=1,
+                alpha=0.7,
+                label=f"Electron {i+1}",
+            )
+
+        # 共振器の円筒を描画
+        theta = np.linspace(0, 2 * np.pi, 50)
+        z_cyl = np.linspace(0, self.cavity.length * 1e2, 2)
+        Theta, Z = np.meshgrid(theta, z_cyl)
+        X_cyl = self.cavity.radius * 1e3 * np.cos(Theta)
+        Y_cyl = self.cavity.radius * 1e3 * np.sin(Theta)
+        ax1.plot_surface(X_cyl, Y_cyl, Z, alpha=0.1, color="gray")
+
+        ax1.set_xlabel("X (mm)")
+        ax1.set_ylabel("Y (mm)")
+        ax1.set_zlabel("Z (cm)")
+        ax1.set_title("Electron Trajectories in Gyrotron Cavity")
+        ax1.legend(fontsize=8)
+
+        # XY平面投影
+        ax2 = fig.add_subplot(132)
+        for i in range(n_plot):
+            traj = trajectories[i]
+            ax2.plot(
+                traj[:, 0] * 1e3,
+                traj[:, 1] * 1e3,
+                color=colors[i],
+                linewidth=1,
+                alpha=0.7,
+            )
+
+        circle = plt.Circle(
+            (0, 0),
+            self.cavity.radius * 1e3,
+            fill=False,
+            color="gray",
+            linestyle="--",
+            linewidth=2,
         )
-        avg_energy += kinetic_energy / n_electrons
+        ax2.add_patch(circle)
+        ax2.set_xlabel("X (mm)")
+        ax2.set_ylabel("Y (mm)")
+        ax2.set_title("XY Projection")
+        ax2.axis("equal")
+        ax2.grid(True)
 
-    ax4.plot(times * 1e9, avg_energy, "b-", linewidth=2)
-    ax4.set_xlabel("Time (ns)")
-    ax4.set_ylabel("Average Kinetic Energy (J)")
-    ax4.set_title("Electron Beam Energy Evolution")
-    ax4.grid(True)
+        # RF電場分布 (contourf)
+        ax3 = fig.add_subplot(133)
+        z_plane = self.cavity.length / 2  # 中央断面
+        X, Y, E_mag = self.calculate_field_distribution(z_plane, n_grid=100)
 
-    # エネルギー変化率 (パワー抽出)
-    energy_loss = (avg_energy[0] - avg_energy) / avg_energy[0] * 100
-    ax5.plot(times * 1e9, energy_loss, "r-", linewidth=2)
-    ax5.set_xlabel("Time (ns)")
-    ax5.set_ylabel("Energy Loss (%)")
-    ax5.set_title("Energy Transfer to RF Field")
-    ax5.grid(True)
+        contour = ax3.contourf(X * 1e3, Y * 1e3, E_mag, levels=20, cmap="hot")
+        ax3.contour(
+            X * 1e3,
+            Y * 1e3,
+            E_mag,
+            levels=10,
+            colors="black",
+            linewidths=0.5,
+            alpha=0.3,
+        )
+        cbar = plt.colorbar(contour, ax=ax3)
+        cbar.set_label("Electric Field (V/m)", rotation=270, labelpad=20)
 
-    plt.tight_layout()
-    plt.show()
+        circle = plt.Circle(
+            (0, 0),
+            self.cavity.radius * 1e3,
+            fill=False,
+            color="white",
+            linestyle="--",
+            linewidth=2,
+        )
+        ax3.add_patch(circle)
+
+        ax3.set_xlabel("X (mm)")
+        ax3.set_ylabel("Y (mm)")
+        ax3.set_title(
+            f"RF E-field Distribution (TE$_{{{self.cavity.mode_m}{self.cavity.mode_n}}}$ mode)"
+        )
+        ax3.axis("equal")
+
+        plt.tight_layout()
+        plt.show()
+
+        # 図2: エネルギー時間発展
+        fig2, (ax4, ax5) = plt.subplots(2, 1, figsize=(10, 8))
+
+        # 平均運動エネルギー（相対論的）
+        n_electrons = len(trajectories)
+        avg_energy = np.zeros(len(times))
+
+        for i in range(n_electrons):
+            traj = trajectories[i]
+            v = np.sqrt(traj[:, 3] ** 2 + traj[:, 4] ** 2 + traj[:, 5] ** 2)
+
+            # 相対論的運動エネルギー: E_kin = (γ - 1)m_e c²
+            gamma_traj = np.array(
+                [PhysicalConstants.lorentz_factor(v_i) if v_i > 0 else 1.0 for v_i in v]
+            )
+            kinetic_energy = (
+                (gamma_traj - 1.0) * PhysicalConstants.m_e * PhysicalConstants.c**2
+            )
+            avg_energy += kinetic_energy / n_electrons
+
+        ax4.plot(times * 1e9, avg_energy, "b-", linewidth=2)
+        ax4.set_xlabel("Time (ns)")
+        ax4.set_ylabel("Average Kinetic Energy (J)")
+        ax4.set_title("Electron Beam Energy Evolution")
+        ax4.grid(True)
+
+        # エネルギー変化率 (パワー抽出)
+        energy_loss = (avg_energy[0] - avg_energy) / avg_energy[0] * 100
+        ax5.plot(times * 1e9, energy_loss, "r-", linewidth=2)
+        ax5.set_xlabel("Time (ns)")
+        ax5.set_ylabel("Energy Loss (%)")
+        ax5.set_title("Energy Transfer to RF Field")
+        ax5.grid(True)
+
+        plt.tight_layout()
+        plt.show()
 
 
 if __name__ == "__main__":
@@ -601,7 +722,7 @@ if __name__ == "__main__":
     # 共振器 (140 GHz帯を想定)
     cavity_radius = 0.02  # 2 cm
     cavity_length = 0.10  # 10 cm
-    mode_m = 10  # TE_{31} モードなど
+    mode_m = 20  # TE_{31} モードなど
     mode_n = 11
 
     cavity = CylindricalCavity(cavity_radius, cavity_length, mode_m, mode_n)
@@ -627,5 +748,8 @@ if __name__ == "__main__":
 
     times, trajectories = simulator.simulate(t_max, dt, E_initial=5e3)
 
+    # 加速電圧分布をプロット
+    simulator.plot_acceleration_voltage()
+
     # 結果プロット
-    plot_results(simulator, times, trajectories)
+    simulator.plot_results(times, trajectories)
